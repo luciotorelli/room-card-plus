@@ -1,0 +1,1104 @@
+room-card-plus:
+  name: Room Card Plus
+  version: v1.0.0
+  creator: Lucio
+  link: https://github.com/Clooos/Bubble-Card/discussions/1919
+  supported:
+    - button
+  description: |
+    I’ve been templating this “room" Bubble Card for a couple of years and  decided to share it as a module.
+
+    Room Card Plus focuses on being customizable with optional conditions:
+    • Title + state layout controls (positioning, spacing, responsive text sizing)
+    • Main icon customization: icon / color / animation / background (with optional OFF opacity)
+    • Rule-based styling (or static styling) using conditions for icon, color, background and animations
+    • Sub-button layout tweaks (size, gap, radius, how many columns) to fit any dashboard
+
+    My favourite feature: replacing the default state with “Entity States” — you can pick one or multiple entities and control what shows (text, icon, or both), plus per-entity color, animation, ordering, and conditions.
+
+      Support: https://buymeacoffee.com/luciotorelli
+
+  code: |
+    code: |2-
+          .large .bubble-button-card-container {
+            --row-size: ${this.config["room-card-plus"]?.rows || 2.5};
+            height: calc(var(--row-height) * var(--row-size) + var(--row-gap) * (var(--row-size) - 1)) !important;
+          }
+
+          .bubble-background,
+          .large .bubble-container {
+            border-radius: ${(this.config["room-card-plus"]?.card_radius ?? 22) + 'px'};
+          }
+
+          .large .bubble-container { overflow: clip; }
+
+          .bubble-button-card {
+            display: grid;
+            grid-template-areas:
+              "n n n b"
+              "s s . b"
+              "s s . b"
+              "i i . b";
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr;
+            justify-items: right;
+            align-items: center;
+          }
+
+          .bubble-name-container {
+            grid-area: n;
+            justify-self: start;
+
+            padding-top: ${(this.config["room-card-plus"]?.ts_pad_top ?? 30) + 'px'} !important;
+            padding-left: ${(this.config["room-card-plus"]?.ts_pad_left ?? 20) + 'px'} !important;
+
+            margin: 0 !important;
+            padding-right: 0 !important;
+            padding-bottom: 0 !important;
+
+            height: ${(this.config["room-card-plus"]?.ts_block_height ?? 52) + 'px'} !important;
+            max-width: calc(100% - ${(this.config["room-card-plus"]?.title_max_width_offset ?? 20)}%) !important;
+
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            gap: ${(this.config["room-card-plus"]?.ts_gap ?? 1) + 'px'} !important;
+            overflow: hidden;
+          }
+
+          .bubble-name {
+            font-weight: 700;
+            font-size: clamp(
+              ${(this.config["room-card-plus"]?.title_em_mobile ?? 0.8)}em,
+              2vw,
+              ${(this.config["room-card-plus"]?.title_em_desktop ?? 1.125)}em
+            ) !important;
+            line-height: 1.1;
+            margin: 0 !important;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+          }
+
+          .bubble-state {
+            grid-area: s;
+            font-weight: 700;
+            font-size: ${(this.config["room-card-plus"]?.state_size_em ?? 0.95)}em !important;
+            line-height: 1.1;
+            margin: 0 !important;
+            width: 100%;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+          }
+
+          /* Main icon color hook (ONLY used when module sets --bubble-icon-color) */
+          .bubble-main-icon-container,
+          .bubble-icon-container {
+            color: var(--bubble-icon-color) !important;
+          }
+
+          @keyframes sc_pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+          @keyframes sc_ping  { 0%{transform:scale(1);opacity:1} 70%{transform:scale(1.25);opacity:.2} 100%{transform:scale(1.3);opacity:0} }
+          @keyframes sc_spin  { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+          @keyframes sc_bounce{ 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+
+          .room-card-plus-state-item {
+            display: inline-flex;
+            align-items: center;
+            gap: ${(this.config["room-card-plus"]?.state_icon_gap ?? 1) + 'px'};
+            white-space: nowrap;
+          }
+
+          .room-card-plus-state-item ha-icon {
+            padding-right: 0;
+            vertical-align: middle;
+            display: inline-block;
+          }
+
+          .bubble-sub-button-container {
+            grid-area: b;
+
+            --slim-sb-size: ${(this.config["room-card-plus"]?.sub_button_size ?? 40) + 'px'};
+            --slim-sb-gap: ${(this.config["room-card-plus"]?.sub_button_gap ?? 10) + 'px'};
+            --slim-sb-radius: ${(this.config["room-card-plus"]?.sub_button_radius ?? 30) + 'px'};
+            --slim-sb-per-col: ${(this.config["room-card-plus"]?.sub_buttons_per_column ?? 3)};
+            --slim-sb-col-gap: ${(this.config["room-card-plus"]?.sub_button_column_gap ?? 8) + 'px'};
+            --slim-sb-left-shift: ${(this.config["room-card-plus"]?.sub_button_left_shift ?? 6) + 'px'};
+
+            display: grid !important;
+            grid-auto-flow: column !important;
+            grid-template-rows: repeat(var(--slim-sb-per-col), var(--slim-sb-size)) !important;
+            grid-auto-columns: var(--slim-sb-size) !important;
+
+            row-gap: var(--slim-sb-gap) !important;
+            column-gap: var(--slim-sb-col-gap) !important;
+
+            align-content: center !important;
+            justify-content: end !important;
+
+            right: 0 !important;
+            max-height: 95%;
+            padding-right: 10px;
+            transform: translateX(0);
+          }
+
+          .bubble-sub-button-container.room-card-plus-two-cols {
+            transform: translateX(calc(-1 * var(--slim-sb-left-shift)));
+          }
+
+          .bubble-sub-button {
+            height: var(--slim-sb-size) !important;
+            width: var(--slim-sb-size) !important;
+            min-width: var(--slim-sb-size) !important;
+            border-radius: var(--slim-sb-radius) !important;
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .bubble-icon-container {
+            grid-area: i;
+
+            width: ${(this.config["room-card-plus"]?.icon_width ?? 100) + 'px'} !important;
+            height: ${(this.config["room-card-plus"]?.icon_height ?? 60) + 'px'} !important;
+
+            position: absolute !important;
+            left: ${(this.config["room-card-plus"]?.icon_left ?? -12) + 'px'} !important;
+            bottom: ${(this.config["room-card-plus"]?.icon_bottom ?? -10) + 'px'} !important;
+            top: auto !important;
+
+            /* baseline (JS will override with rules + off-opacity) */
+            background-color: ${(this.config["room-card-plus"]?.main_icon_bg_color ?? '#ffc47e')} !important;
+
+            transition: background-color 0.3s ease;
+          }
+
+          .bubble-icon-container {
+            border-radius: ${(() => {
+              const s = this.config["room-card-plus"]?.icon_corner_style ?? 'diagonal';
+              const r = (this.config["room-card-plus"]?.icon_radius ?? 32);
+
+              const tl = this.config["room-card-plus"]?.icon_radius_tl;
+              const tr = this.config["room-card-plus"]?.icon_radius_tr;
+              const br = this.config["room-card-plus"]?.icon_radius_br;
+              const bl = this.config["room-card-plus"]?.icon_radius_bl;
+
+              const hasCustom = tl !== undefined || tr !== undefined || br !== undefined || bl !== undefined;
+              if (hasCustom) return `${(tl ?? 0)}px ${(tr ?? 0)}px ${(br ?? 0)}px ${(bl ?? 0)}px`;
+
+              if (s === 'square') return `0px`;
+              if (s === 'rounded') return `${r}px`;
+              return `0px ${r}px 0px ${r}px`;
+            })()} !important;
+          }
+
+          .bubble-icon {
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            position: relative !important;
+            --mdc-icon-size: ${(this.config["room-card-plus"]?.icon_size ?? 50) + 'px'} !important;
+            opacity: 0.8 !important;
+            color: ${this.config["room-card-plus"]?.icon_color ?? '#1c1c1c'} !important;
+          }
+
+          ${(() => {
+            try {
+              const cfg = this.config["room-card-plus"] || {};
+
+              const boolVal = (v, def) => {
+                if (v === undefined || v === null) return def;
+                if (typeof v === 'boolean') return v;
+                if (typeof v === 'string') {
+                  const s = v.trim().toLowerCase();
+                  if (s === 'true') return true;
+                  if (s === 'false') return false;
+                }
+                return def;
+              };
+
+              const animToCss = (name, dur=1.2) => {
+                const d = Number(dur ?? 1.2);
+                const ds = (isNaN(d) || d <= 0) ? 1.2 : d;
+                switch (name) {
+                  case 'pulse': return `sc_pulse ${ds}s ease-in-out infinite`;
+                  case 'ping':  return `sc_ping ${ds}s ease-out infinite`;
+                  case 'spin':  return `sc_spin ${ds}s linear infinite`;
+                  case 'bounce':return `sc_bounce ${ds}s ease-in-out infinite`;
+                  case 'none':
+                  default: return '';
+                }
+              };
+
+              const evalCondFallback = (condObj) => {
+                if (!condObj || typeof condObj !== 'object' || !condObj.condition) return false;
+                const t = condObj.condition;
+
+                switch (t) {
+                  case 'state': {
+                    const eid = condObj.entity_id || condObj.entity;
+                    if (!eid || !hass.states[eid]) return false;
+                    const v = condObj.attribute
+                      ? hass.states[eid].attributes?.[condObj.attribute]
+                      : hass.states[eid].state;
+                    if (v === undefined) return false;
+                    return Array.isArray(condObj.state) ? condObj.state.includes(v) : v === condObj.state;
+                  }
+                  case 'numeric_state': {
+                    const eid = condObj.entity_id || condObj.entity;
+                    if (!eid || !hass.states[eid]) return false;
+                    const raw = condObj.attribute
+                      ? hass.states[eid].attributes?.[condObj.attribute]
+                      : hass.states[eid].state;
+                    const n = parseFloat(raw);
+                    if (isNaN(n)) return false;
+                    let ok = true;
+                    if (condObj.above !== undefined) ok = ok && (n > parseFloat(condObj.above));
+                    if (condObj.below !== undefined) ok = ok && (n < parseFloat(condObj.below));
+                    return ok;
+                  }
+                  case 'and':
+                    return Array.isArray(condObj.conditions) && condObj.conditions.every(evalCondFallback);
+                  case 'or':
+                    return Array.isArray(condObj.conditions) && condObj.conditions.some(evalCondFallback);
+                  case 'not':
+                    if (Array.isArray(condObj.conditions) && condObj.conditions[0]) return !evalCondFallback(condObj.conditions[0]);
+                    if (condObj.condition_obj) return !evalCondFallback(condObj.condition_obj);
+                    return false;
+                  default:
+                    return false;
+                }
+              };
+
+              const checkAllConditions = (cProp) => {
+                if (!cProp) return true;
+                const arr = [].concat(cProp).filter(Boolean);
+                if (typeof checkConditionsMet === 'function') return checkConditionsMet(arr, hass);
+                return arr.every(evalCondFallback);
+              };
+
+              const toRulesArray = (rules) => {
+                if (!rules) return [];
+                if (Array.isArray(rules)) return rules.filter(Boolean);
+                if (typeof rules === 'object') {
+                  return Object.keys(rules)
+                    .sort((a,b)=>parseInt(a)-parseInt(b))
+                    .map(k => rules[k])
+                    .filter(Boolean);
+                }
+                return [];
+              };
+
+              const firstMatch = (rules, keyName) => {
+                const arr = toRulesArray(rules);
+                for (const r of arr) {
+                  if (!r) continue;
+                  if (checkAllConditions(r.condition)) {
+                    if (r[keyName] !== undefined && r[keyName] !== null && r[keyName] !== '') return r[keyName];
+                    if (r.stop !== false) return null;
+                  }
+                }
+                return null;
+              };
+
+              const pullEntitiesFrom = (x, set) => {
+                if (!x) return;
+                const s = JSON.stringify(x);
+
+                const matches1 = s.match(/"entity_id"\s*:\s*"([^"]+)"/g);
+                if (matches1) matches1.forEach(m => set.add(m.split('"')[3]));
+
+                const matches2 = s.match(/"entity"\s*:\s*"([^"]+)"/g);
+                if (matches2) matches2.forEach(m => set.add(m.split('"')[3]));
+              };
+
+              const normalizeColor = (c) => {
+                if (!c) return '';
+                const s = String(c).trim();
+                if (!s) return '';
+                if (s.startsWith('#') || s.startsWith('rgb') || s.startsWith('hsl') || s.startsWith('var(')) return s;
+                return `var(--${s}-color)`;
+              };
+
+              const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+
+              const hexToRgba = (hex, a) => {
+                const h = String(hex).trim().replace('#','');
+                if (![3,4,6,8].includes(h.length)) return null;
+                const to255 = (s) => parseInt(s, 16);
+                let r,g,b;
+                if (h.length <= 4) {
+                  r = to255(h[0] + h[0]);
+                  g = to255(h[1] + h[1]);
+                  b = to255(h[2] + h[2]);
+                } else {
+                  r = to255(h.slice(0,2));
+                  g = to255(h.slice(2,4));
+                  b = to255(h.slice(4,6));
+                }
+                return `rgba(${r}, ${g}, ${b}, ${a})`;
+              };
+
+              const applyOpacity = (color, a) => {
+                const c = String(color).trim();
+                if (c.startsWith('#')) {
+                  const rgba = hexToRgba(c, a);
+                  if (rgba) return rgba;
+                }
+                return `color-mix(in srgb, ${c} ${Math.round(a*100)}%, transparent)`;
+              };
+
+              /* =============================
+                 MAIN ICON (icon + color + background)
+                 ============================= */
+
+              this._rcp_main_cache ??= { defaultIcon: null };
+
+              const mainIconEl = card.querySelector('.bubble-main-icon') || icon || null;
+              const mainIconContainer = card.querySelector('.bubble-main-icon-container') || null;
+              const iconBgEl = card.querySelector('.bubble-icon-container') || null;
+
+              if (mainIconEl) {
+                // Store default Bubble icon once
+                if (!this._rcp_main_cache.defaultIcon) {
+                  const cfgIcon = (this.config?.icon || '').trim();
+                  const domIcon = mainIconEl.icon || mainIconEl.getAttribute?.('icon') || '';
+                  this._rcp_main_cache.defaultIcon = cfgIcon || domIcon || null;
+                }
+
+                // ICON rules
+                const testIcon = (cfg.main_icon_test_icon || '').trim();
+                const ruleIcon = firstMatch(cfg.main_icon_icon_rules, 'icon');
+                const finalIcon = testIcon || ruleIcon || this._rcp_main_cache.defaultIcon || '';
+
+                if (finalIcon) {
+                  if (mainIconEl.icon !== finalIcon) mainIconEl.icon = finalIcon;
+                  if (mainIconEl.getAttribute?.('icon') !== finalIcon) mainIconEl.setAttribute('icon', finalIcon);
+                }
+
+                // COLOR rules (forced)
+                const ruleColorRaw = firstMatch(cfg.main_icon_color_rules, 'color');
+                const ruleColor = normalizeColor(ruleColorRaw);
+
+                if (ruleColor) {
+                  card.style.setProperty('--bubble-icon-color', ruleColor, 'important');
+                  card.style.setProperty('--paper-item-icon-color', ruleColor, 'important');
+                  card.style.setProperty('--mdc-icon-button-icon-color', ruleColor, 'important');
+
+                  mainIconEl.style.setProperty('color', ruleColor, 'important');
+                  if (mainIconContainer) mainIconContainer.style.setProperty('color', ruleColor, 'important');
+                } else {
+                  card.style.setProperty('--bubble-icon-color', 'initial', 'important');
+                  card.style.setProperty('--paper-item-icon-color', 'initial', 'important');
+                  card.style.setProperty('--mdc-icon-button-icon-color', 'initial', 'important');
+
+                  mainIconEl.style.removeProperty('color');
+                  if (mainIconContainer) mainIconContainer.style.removeProperty('color');
+                }
+
+                // ANIMATION rules
+                const ruleAnimName = firstMatch(cfg.main_icon_animation_rules, 'animation');
+                const ruleAnimDur  = firstMatch(cfg.main_icon_animation_rules, 'duration');
+                const ruleAnim = animToCss(ruleAnimName, ruleAnimDur);
+
+                if (ruleAnim) {
+                  mainIconEl.style.setProperty('animation', ruleAnim, 'important');
+                  mainIconEl.style.setProperty('display', 'inline-block', 'important');
+                } else {
+                  mainIconEl.style.removeProperty('animation');
+                }
+
+                const size = Number(cfg.icon_size ?? 50);
+                mainIconEl.style.setProperty('--mdc-icon-size', `${size}px`, 'important');
+              }
+
+              // MAIN ICON BACKGROUND rules
+              if (iconBgEl) {
+                const bgRuleRaw = firstMatch(cfg.main_icon_bg_color_rules, 'color');
+                const bgBase = normalizeColor(bgRuleRaw || cfg.main_icon_bg_color || '#ffc47e');
+
+                const offPct = Number(cfg.main_icon_bg_off_opacity ?? 20);
+                const pct = clamp(offPct, 0, 100);
+                const alpha = pct / 100;
+
+                const ent = this.config?.entity;
+                const st = ent ? hass.states?.[ent]?.state : null;
+                const isOff = (st === 'off' || st === 'unavailable' || st === 'unknown');
+
+                const bgFinal = isOff ? applyOpacity(bgBase, alpha) : bgBase;
+                iconBgEl.style.setProperty('background-color', bgFinal, 'important');
+              }
+
+              /* =============================
+                 STATE ENTITIES
+                 ============================= */
+              const stateEl = card.querySelector('.bubble-state');
+              if (!stateEl) return '';
+
+              const entities = cfg.state_entities || [];
+              if (!Array.isArray(entities) || entities.length === 0) return '';
+
+              const watched2 = new Set();
+              const mainEnt2 = this.config?.entity;
+              if (mainEnt2) watched2.add(mainEnt2);
+
+              entities.forEach(o => {
+                if (o?.entity) watched2.add(o.entity);
+                pullEntitiesFrom(o?.condition, watched2);
+                pullEntitiesFrom(o?.icon_rules, watched2);
+                pullEntitiesFrom(o?.color_rules, watched2);
+                pullEntitiesFrom(o?.animation_rules, watched2);
+              });
+
+              let sig2 = '';
+              for (const eid of watched2) {
+                const st = hass.states?.[eid];
+                if (st) sig2 += st.last_updated;
+              }
+
+              const hasMarker = stateEl.querySelector?.('.room-card-plus-state-marker');
+              this._sc_state_cache ??= { lastSig: '', lastHtml: '' };
+
+              const mustRebuild = (!hasMarker);
+              if (!mustRebuild && sig2 && sig2 === this._sc_state_cache.lastSig) return '';
+
+              this._sc_state_cache.lastSig = sig2 || 'static_done';
+
+              const gapPx = Number(cfg.state_multi_gap ?? 0);
+
+              const items = [];
+              entities.forEach((o, idx) => {
+                if (!o?.entity) return;
+                const st = hass.states?.[o.entity];
+                if (!st) return;
+                if (!checkAllConditions(o.condition)) return;
+
+                const raw = o.attribute ? st.attributes?.[o.attribute] : st.state;
+                if (raw === undefined || raw === null) return;
+
+                let value = raw;
+                const num = parseFloat(raw);
+                if (!isNaN(num)) {
+                  const d = o.decimals ?? 0;
+                  value = d > 0 ? num.toFixed(d) : String(Math.trunc(num));
+                }
+
+                const unit = boolVal(o.show_unit, true) ? (st.attributes?.unit_of_measurement || '') : '';
+                const showText = boolVal(o.show_text, true);
+                const showIcon = boolVal(o.show_icon, false);
+
+                const icon2 = firstMatch(o.icon_rules, 'icon') || st.attributes?.icon || null;
+                const color2 = normalizeColor(firstMatch(o.color_rules, 'color') || '');
+
+                const animName2 = firstMatch(o.animation_rules, 'animation');
+                const animDur2  = firstMatch(o.animation_rules, 'duration');
+                const anim2 = animToCss(animName2, animDur2);
+
+                const isz = Number(o.icon_size ?? 14);
+
+                items.push({
+                  order: Number(o.order_priority ?? 100) + (idx / 1000),
+                  html: (() => {
+                    let html = `<span class="room-card-plus-state-item" style="${anim2 ? `animation:${anim2} !important; display:inline-block;` : ''} ${color2 ? `color:${color2} !important;` : ''}">`;
+                    if (showIcon && icon2) {
+                      html += `<ha-icon icon="${icon2}"
+                                style="padding-right:6px; --mdc-icon-size:${isz}px; vertical-align:middle; display:inline-block; ${color2 ? `color:${color2} !important;` : ''}">
+                              </ha-icon>`;
+                    }
+                    if (showText) {
+                      const txt = `${value}${unit ? ' ' + unit : ''}`;
+                      html += `<span class="room-card-plus-state-text" style="${color2 ? `color:${color2} !important;` : ''}">${txt}</span>`;
+                    }
+                    html += `</span>`;
+                    return html;
+                  })()
+                });
+              });
+
+              items.sort((a,b) => a.order - b.order);
+
+              const html =
+                `<span class="room-card-plus-state-marker" style="display:none;"></span>` +
+                items.map(i => i.html).join(`<span style="display:inline-block; width:${gapPx}px;"></span>`);
+
+              if (html !== this._sc_state_cache.lastHtml) {
+                this._sc_state_cache.lastHtml = html;
+                stateEl.innerHTML = html || '';
+              }
+
+            } catch (e) {
+              console.error('[room-card-plus] error:', e);
+            }
+            return '';
+          })()}
+
+          ${(() => {
+            try {
+              const cfg = this.config["room-card-plus"] || {};
+              const perCol = Number(cfg.sub_buttons_per_column ?? 3);
+              const cont = card.querySelector('.bubble-sub-button-container');
+              if (!cont || !perCol) return '';
+              const btns = cont.querySelectorAll('.bubble-sub-button');
+              cont.classList.toggle('room-card-plus-two-cols', btns.length > perCol);
+            } catch (e) {
+              console.error('[room-card-plus] sub-button layout error:', e);
+            }
+            return '';
+          })()}
+
+  editor:
+    - type: expandable
+      title: Card settings
+      icon: mdi:card-bulleted
+      schema:
+        - name: card_radius
+          label: Card radius (px)
+          default: 22
+          selector:
+            number:
+              min: 0
+              max: 40
+              step: 1
+
+    - type: expandable
+      title: Title & State size
+      icon: mdi:format-size
+      schema:
+        - name: title_em_mobile
+          label: Title size (mobile, em)
+          default: 0.8
+          selector:
+            number:
+              min: 0.6
+              max: 1.2
+              step: 0.05
+        - name: title_em_desktop
+          label: Title size (desktop, em)
+          default: 1.125
+          selector:
+            number:
+              min: 0.8
+              max: 1.6
+              step: 0.05
+        - name: state_size_em
+          label: State font size (em)
+          default: 0.95
+          selector:
+            number:
+              min: 0.7
+              max: 1.6
+              step: 0.05
+        - name: ts_gap
+          label: Gap between title & state (px)
+          default: 1
+          selector:
+            number:
+              min: 0
+              max: 12
+              step: 1
+
+    - type: expandable
+      title: Title & State positioning
+      icon: mdi:cursor-move
+      schema:
+        - name: ts_pad_top
+          label: Top padding (px)
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 40
+              step: 1
+        - name: ts_pad_left
+          label: Left padding (px)
+          default: 20
+          selector:
+            number:
+              min: 0
+              max: 40
+              step: 1
+        - name: ts_block_height
+          label: Title/State block height (px)
+          default: 52
+          selector:
+            number:
+              min: 24
+              max: 140
+              step: 2
+        - name: title_max_width_offset
+          label: Text max-width offset (%)
+          default: 20
+          selector:
+            number:
+              min: 10
+              max: 60
+              step: 1
+
+    - type: expandable
+      title: Main Icon positioning
+      icon: mdi:cursor-move
+      schema:
+        - name: icon_width
+          label: Icon container width (px)
+          default: 100
+          selector:
+            number:
+              min: 60
+              max: 180
+              step: 1
+        - name: icon_height
+          label: Icon container height (px)
+          default: 60
+          selector:
+            number:
+              min: 40
+              max: 140
+              step: 1
+        - name: icon_left
+          label: Icon left offset (px)
+          default: -12
+          selector:
+            number:
+              min: -80
+              max: 40
+              step: 1
+        - name: icon_bottom
+          label: Icon bottom offset (px)
+          default: -10
+          selector:
+            number:
+              min: -80
+              max: 40
+              step: 1
+
+    - type: expandable
+      title: Main Icon style
+      icon: mdi:palette
+      schema:
+        - name: icon_corner_style
+          label: Corner style
+          default: diagonal
+          selector:
+            select:
+              options:
+                - label: Diagonal (0 R 0 R)
+                  value: diagonal
+                - label: Rounded (all corners)
+                  value: rounded
+                - label: Square
+                  value: square
+        - name: icon_radius
+          label: Corner radius (px)
+          default: 32
+          selector:
+            number:
+              min: 0
+              max: 60
+              step: 1
+        - name: icon_radius_tl
+          label: Corner radius TL (px) — optional
+          selector:
+            number:
+              min: 0
+              max: 60
+              step: 1
+        - name: icon_radius_tr
+          label: Corner radius TR (px) — optional
+          selector:
+            number:
+              min: 0
+              max: 60
+              step: 1
+        - name: icon_radius_br
+          label: Corner radius BR (px) — optional
+          selector:
+            number:
+              min: 0
+              max: 60
+              step: 1
+        - name: icon_radius_bl
+          label: Corner radius BL (px) — optional
+          selector:
+            number:
+              min: 0
+              max: 60
+              step: 1
+        - name: icon_size
+          label: Icon size (px)
+          default: 50
+          selector:
+            number:
+              min: 24
+              max: 80
+              step: 1
+        - name: icon_color
+          label: Icon color (default)
+          default: "#1c1c1c"
+          selector:
+            text: {}
+        - name: main_icon_bg_color
+          label: Main icon background color (hex/css/ui_color)
+          default: "#ffc47e"
+          selector:
+            text: {}
+        - name: main_icon_bg_off_opacity
+          label: Background opacity when main entity is OFF (%)
+          default: 20
+          selector:
+            number:
+              min: 0
+              max: 100
+              step: 1
+        - name: main_icon_test_icon
+          label: Test icon override (forces icon.icon)
+          selector:
+            icon: {}
+
+    - type: expandable
+      title: Main Icon rules
+      icon: mdi:shield-star-outline
+      schema:
+        - name: main_icon_icon_rules
+          label: Icon rules (optional)
+          selector:
+            object:
+              multiple: true
+              fields:
+                name:
+                  label: Rule name (optional)
+                  selector:
+                    text: {}
+                condition:
+                  label: Condition (optional)
+                  selector:
+                    condition: {}
+                icon:
+                  label: Icon
+                  selector:
+                    icon: {}
+                stop:
+                  label: Stop after match
+                  default: true
+                  selector:
+                    boolean: {}
+        - name: main_icon_color_rules
+          label: Color rules (optional)
+          selector:
+            object:
+              multiple: true
+              fields:
+                name:
+                  label: Rule name (optional)
+                  selector:
+                    text: {}
+                condition:
+                  label: Condition (optional)
+                  selector:
+                    condition: {}
+                color:
+                  label: Color (hex/css or ui_color name)
+                  selector:
+                    text: {}
+                stop:
+                  label: Stop after match
+                  default: true
+                  selector:
+                    boolean: {}
+        - name: main_icon_animation_rules
+          label: Animation rules (optional)
+          selector:
+            object:
+              multiple: true
+              fields:
+                name:
+                  label: Rule name (optional)
+                  selector:
+                    text: {}
+                condition:
+                  label: Condition (optional)
+                  selector:
+                    condition: {}
+                animation:
+                  label: Animation
+                  selector:
+                    select:
+                      options:
+                        - label: None
+                          value: none
+                        - label: Pulse
+                          value: pulse
+                        - label: Ping
+                          value: ping
+                        - label: Spin
+                          value: spin
+                        - label: Bounce
+                          value: bounce
+                duration:
+                  label: Duration (seconds)
+                  default: 1.2
+                  selector:
+                    number:
+                      min: 0.3
+                      max: 5
+                      step: 0.1
+                stop:
+                  label: Stop after match
+                  default: true
+                  selector:
+                    boolean: {}
+
+    - type: expandable
+      title: Main Icon background rules
+      icon: mdi:palette-swatch
+      schema:
+        - name: main_icon_bg_color_rules
+          label: Background color rules (optional)
+          selector:
+            object:
+              multiple: true
+              fields:
+                name:
+                  label: Rule name (optional)
+                  selector:
+                    text: {}
+                condition:
+                  label: Condition (optional)
+                  selector:
+                    condition: {}
+                color:
+                  label: Background color (hex/css or ui_color name)
+                  selector:
+                    text: {}
+                stop:
+                  label: Stop after match
+                  default: true
+                  selector:
+                    boolean: {}
+
+    - type: expandable
+      title: Sub-button Layout
+      icon: mdi:dots-vertical
+      schema:
+        - name: sub_button_size
+          label: Sub-button size (px)
+          default: 32
+          selector:
+            number:
+              min: 28
+              max: 60
+              step: 1
+        - name: sub_button_gap
+          label: Gap between sub-buttons (px)
+          default: 10
+          selector:
+            number:
+              min: 0
+              max: 24
+              step: 1
+        - name: sub_button_radius
+          label: Sub-button radius (px)
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 30
+              step: 1
+        - name: sub_buttons_per_column
+          label: Buttons per column
+          default: 3
+          selector:
+            number:
+              min: 1
+              max: 8
+              step: 1
+        - name: sub_button_column_gap
+          label: Column gap (px)
+          default: 8
+          selector:
+            number:
+              min: 0
+              max: 24
+              step: 1
+        - name: sub_button_left_shift
+          label: Left shift when 2 columns (px)
+          default: 6
+          selector:
+            number:
+              min: 0
+              max: 30
+              step: 1
+
+    - type: expandable
+      title: State entities
+      icon: mdi:information-outline
+      schema:
+        - name: state_multi_gap
+          label: Gap between state entities (px)
+          default: 0
+          selector:
+            number:
+              min: 0
+              max: 24
+              step: 1
+        - name: state_icon_gap
+          label: Icon ↔ text gap (px) (default)
+          default: 1
+          selector:
+            number:
+              min: 0
+              max: 16
+              step: 1
+        - name: state_entities
+          label: State entities
+          selector:
+            object:
+              multiple: true
+              fields:
+                name:
+                  label: Name
+                  required: true
+                  selector:
+                    text: {}
+                order_priority:
+                  label: Order priority (left → right)
+                  selector:
+                    number:
+                      min: 1
+                      max: 50
+                      step: 1
+                      mode: box
+                entity:
+                  label: Entity
+                  required: true
+                  selector:
+                    entity: {}
+                attribute:
+                  label: Attribute (optional)
+                  selector:
+                    attribute: {}
+                decimals:
+                  label: Decimals (numeric only)
+                  default: 0
+                  selector:
+                    number:
+                      min: 0
+                      max: 3
+                      step: 1
+                show_unit:
+                  label: Show unit
+                  default: true
+                  selector:
+                    boolean: {}
+                condition:
+                  label: Condition (optional)
+                  selector:
+                    condition: {}
+                show_icon:
+                  label: Show icon
+                  default: false
+                  selector:
+                    boolean: {}
+                show_text:
+                  label: Show text
+                  default: true
+                  selector:
+                    boolean: {}
+                icon_size:
+                  label: Icon size (px)
+                  default: 14
+                  selector:
+                    number:
+                      min: 10
+                      max: 24
+                      step: 1
+                icon_rules:
+                  label: Icon rules (optional)
+                  selector:
+                    object:
+                      multiple: true
+                      fields:
+                        name:
+                          label: Rule name (optional)
+                          selector:
+                            text: {}
+                        condition:
+                          label: Condition (optional)
+                          selector:
+                            condition: {}
+                        icon:
+                          label: Icon
+                          selector:
+                            icon: {}
+                        stop:
+                          label: Stop after match
+                          default: true
+                          selector:
+                            boolean: {}
+                color_rules:
+                  label: Color rules (optional)
+                  selector:
+                    object:
+                      multiple: true
+                      fields:
+                        name:
+                          label: Rule name (optional)
+                          selector:
+                            text: {}
+                        condition:
+                          label: Condition (optional)
+                          selector:
+                            condition: {}
+                        color:
+                          label: Color (hex/css or ui_color name)
+                          selector:
+                            text: {}
+                        stop:
+                          label: Stop after match
+                          default: true
+                          selector:
+                            boolean: {}
+                animation_rules:
+                  label: Animation rules (optional)
+                  selector:
+                    object:
+                      multiple: true
+                      fields:
+                        name:
+                          label: Rule name (optional)
+                          selector:
+                            text: {}
+                        condition:
+                          label: Condition (optional)
+                          selector:
+                            condition: {}
+                        animation:
+                          label: Animation
+                          selector:
+                            select:
+                              options:
+                                - label: None
+                                  value: none
+                                - label: Pulse
+                                  value: pulse
+                                - label: Ping
+                                  value: ping
+                                - label: Spin
+                                  value: spin
+                                - label: Bounce
+                                  value: bounce
+                        duration:
+                          label: Duration (seconds)
+                          default: 1.2
+                          selector:
+                            number:
+                              min: 0.3
+                              max: 5
+                              step: 0.1
+                        stop:
+                          label: Stop after match
+                          default: true
+                          selector:
+                            boolean: {}
+              label_field: name
+              description_field: entity
