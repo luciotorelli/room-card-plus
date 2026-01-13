@@ -141,6 +141,7 @@ room-card-plus:
             max-height: 95%;
             padding-right: 10px;
             transform: translateX(0);
+            z-index: 99 !important;
           }
 
           .bubble-sub-button-container.room-card-plus-two-cols {
