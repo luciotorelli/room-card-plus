@@ -159,6 +159,10 @@ room-card-plus:
             justify-content: center;
           }
 
+          .bubble-sub-button.hidden {
+            display: none !important;
+          }
+
           .bubble-icon-container {
             grid-area: i;
 
