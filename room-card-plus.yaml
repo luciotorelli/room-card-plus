@@ -202,13 +202,14 @@ room-card-plus:
           }
 
           .bubble-icon {
-            width: 50px;
-            height: 50px;
+            width: ${(this.config["room-card-plus"]?.icon_size ?? 50) + 'px'};
+            height: ${(this.config["room-card-plus"]?.icon_size ?? 50) + 'px'};
             padding: 0;
             position: relative !important;
             --mdc-icon-size: ${(this.config["room-card-plus"]?.icon_size ?? 50) + 'px'} !important;
             opacity: 0.8 !important;
             color: ${this.config["room-card-plus"]?.icon_color ?? '#1c1c1c'} !important;
+            transform: translate(${(this.config["room-card-plus"]?.icon_offset_x ?? 0) + 'px'}, ${(this.config["room-card-plus"]?.icon_offset_y ?? 0) + 'px'});
           }
 
           /* ===== FOOTER DRAWER STYLES ===== */
@@ -1091,11 +1092,11 @@ room-card-plus:
               max: 60
               step: 1
     - type: expandable
-      title: Main Icon positioning
-      icon: mdi:cursor-move
+      title: Icon container
+      icon: mdi:palette
       schema:
         - name: icon_width
-          label: Icon container width (px)
+          label: Container width (px)
           default: 100
           selector:
             number:
@@ -1103,33 +1104,13 @@ room-card-plus:
               max: 180
               step: 1
         - name: icon_height
-          label: Icon container height (px)
+          label: Container height (px)
           default: 60
           selector:
             number:
               min: 40
               max: 140
               step: 1
-        - name: icon_left
-          label: Icon left offset (px)
-          default: -12
-          selector:
-            number:
-              min: -80
-              max: 40
-              step: 1
-        - name: icon_bottom
-          label: Icon bottom offset (px)
-          default: -10
-          selector:
-            number:
-              min: -80
-              max: 40
-              step: 1
-    - type: expandable
-      title: Main Icon style
-      icon: mdi:palette
-      schema:
         - name: icon_corner_style
           label: Corner style
           default: diagonal
@@ -1178,21 +1159,8 @@ room-card-plus:
               min: 0
               max: 60
               step: 1
-        - name: icon_size
-          label: Icon size (px)
-          default: 50
-          selector:
-            number:
-              min: 24
-              max: 80
-              step: 1
-        - name: icon_color
-          label: Icon color (default)
-          default: '#1c1c1c'
-          selector:
-            text: {}
         - name: main_icon_bg_color
-          label: Main icon background color (hex/css/ui_color)
+          label: Background color (hex/css/ui_color)
           default: '#ffc47e'
           selector:
             text: {}
@@ -1204,8 +1172,61 @@ room-card-plus:
               min: 0
               max: 100
               step: 1
+    - type: expandable
+      title: Icon container positioning
+      icon: mdi:cursor-move
+      schema:
+        - name: icon_left
+          label: Container left offset (px)
+          default: -12
+          selector:
+            number:
+              min: -80
+              max: 40
+              step: 1
+        - name: icon_bottom
+          label: Container bottom offset (px)
+          default: -10
+          selector:
+            number:
+              min: -80
+              max: 40
+              step: 1
+    - type: expandable
+      title: Icon positioning
+      icon: mdi:image-move
+      schema:
+        - name: icon_size
+          label: Icon size (px)
+          default: 50
+          selector:
+            number:
+              min: 24
+              max: 80
+              step: 1
+        - name: icon_offset_x
+          label: Horizontal offset (px)
+          default: 0
+          selector:
+            number:
+              min: -30
+              max: 30
+              step: 1
+        - name: icon_offset_y
+          label: Vertical offset (px)
+          default: 0
+          selector:
+            number:
+              min: -30
+              max: 30
+              step: 1
+        - name: icon_color
+          label: Icon color (default)
+          default: '#1c1c1c'
+          selector:
+            text: {}
         - name: main_icon_test_icon
-          label: Test icon override (forces icon.icon)
+          label: Test icon override (forces icon)
           selector:
             icon: {}
     - type: expandable
