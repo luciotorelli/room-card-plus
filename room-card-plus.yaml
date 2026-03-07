@@ -1,20 +1,21 @@
 room-card-plus:
   name: Room Card Plus
-  version: v1.0.0
+  version: v1.1.0
   creator: Lucio
   link: https://github.com/Clooos/Bubble-Card/discussions/1919
   supported:
     - button
   description: |
-    I’ve been templating this “room" Bubble Card for a couple of years and  decided to share it as a module.
+    I've been templating this "room" Bubble Card for a couple of years and  decided to share it as a module.
 
     Room Card Plus focuses on being customizable with optional conditions:
     • Title + state layout controls (positioning, spacing, responsive text sizing)
     • Main icon customization: icon / color / animation / background (with optional OFF opacity)
     • Rule-based styling (or static styling) using conditions for icon, color, background and animations
     • Sub-button layout tweaks (size, gap, radius, how many columns) to fit any dashboard
+    • **Footer Drawer**: optionally move sub-buttons into a slide-up drawer with a center-bottom handle
 
-    My favourite feature: replacing the default state with “Entity States” — you can pick one or multiple entities and control what shows (text, icon, or both), plus per-entity color, animation, ordering, and conditions.
+    My favourite feature: replacing the default state with "Entity States" — you can pick one or multiple entities and control what shows (text, icon, or both), plus per-entity color, animation, ordering, and conditions.
 
       Support: https://buymeacoffee.com/luciotorelli
   code: |
@@ -115,6 +116,7 @@ room-card-plus:
             display: inline-block;
           }
 
+          /* ===== Sub-button container (standard, non-footer mode) ===== */
           .bubble-sub-button-container {
             grid-area: b;
 
@@ -207,6 +209,226 @@ room-card-plus:
             --mdc-icon-size: ${(this.config["room-card-plus"]?.icon_size ?? 50) + 'px'} !important;
             opacity: 0.8 !important;
             color: ${this.config["room-card-plus"]?.icon_color ?? '#1c1c1c'} !important;
+          }
+
+          /* ===== FOOTER DRAWER STYLES ===== */
+
+          /* Allow drawer to overflow below the card */
+          .bubble-container.rcp-footer-overflow {
+            overflow: visible !important;
+            z-index: 1;
+          }
+
+          .bubble-container.rcp-footer-overflow.rcp-drawer-elevated {
+            z-index: 999;
+          }
+
+          /* When drawer is open, flatten the bottom corners so the drawer
+             continues seamlessly — no gap behind rounded corners */
+          .bubble-container.rcp-footer-overflow.rcp-drawer-elevated {
+            border-bottom-left-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+          }
+
+          .rcp-drawer-elevated .bubble-background {
+            border-bottom-left-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+          }
+
+          /* Clip the card wrapper so the icon doesn't bleed outside the card,
+             while the drawer (a sibling of the wrapper) still overflows */
+          .bubble-button-card {
+            overflow: hidden !important;
+          }
+
+          /*
+           * IMMEDIATELY hide the bottom sub-button container when footer is enabled.
+           * This is a config-driven CSS rule so it applies before JS even runs,
+           * preventing bottom sub-buttons from ever affecting the main card layout.
+           *
+           * Bubble Card adds 'with-bottom-buttons' to the container and 'fixed-top'
+           * to the wrapper when bottom sub-buttons exist. These classes change the
+           * entire card layout (baseline alignment, flex wrapping, content container).
+           * We must forcefully revert ALL of these side-effects.
+           */
+          ${this.config["room-card-plus"]?.footer_enabled ? `
+          .bubble-sub-button-bottom-container {
+            display: none !important;
+            position: absolute !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            height: 0 !important;
+            overflow: hidden !important;
+          }
+
+          /* Revert 'fixed-top' on wrapper — Bubble adds this when bottom sub-buttons exist */
+          .bubble-button-card.fixed-top {
+            align-items: center !important;
+          }
+
+          /* Revert the content container changes that fixed-top causes */
+          .bubble-button-card.fixed-top .bubble-content-container {
+            display: contents !important;
+            align-items: unset !important;
+            align-self: unset !important;
+            overflow: unset !important;
+            flex-grow: unset !important;
+            margin-top: 0 !important;
+            min-height: unset !important;
+          }
+
+          /* Revert the sub-button container's fixed-top alignment */
+          .bubble-sub-button-container.fixed-top {
+            align-self: center !important;
+          }
+
+          /*
+           * When bottom sub-buttons exist, Bubble adds .groups-layout-inline to the
+           * container and wraps buttons in a .bubble-sub-button-group child.
+           * The container's grid was designed for direct button children — now it has
+           * ONE child (the group div) so grid-template-rows for 3 items breaks.
+           *
+           * Fix: container becomes a simple flex passthrough (still in grid-area b),
+           * the GROUP gets the actual column grid layout with all the slim-sb vars.
+           */
+          .bubble-sub-button-container.groups-layout-inline {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: end !important;
+            justify-content: center !important;
+          }
+
+          .bubble-sub-button-container .bubble-sub-button-group {
+            display: grid !important;
+            grid-auto-flow: column !important;
+            grid-template-rows: repeat(var(--slim-sb-per-col), var(--slim-sb-size)) !important;
+            grid-auto-columns: var(--slim-sb-size) !important;
+            row-gap: var(--slim-sb-gap) !important;
+            column-gap: var(--slim-sb-col-gap) !important;
+            align-items: center !important;
+            justify-content: end !important;
+            flex-direction: unset !important;
+            margin-top: 0 !important;
+          }
+
+          /* Undo the margin-top that fixed-top adds to the sub-button container */
+          .fixed-top .bubble-sub-button-container {
+            margin-top: 0 !important;
+          }
+          ` : ''}
+
+          .rcp-footer-handle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 2px 18px 4px 18px;
+            border-radius: 0 0 ${(this.config["room-card-plus"]?.footer_handle_radius ?? 14)}px ${(this.config["room-card-plus"]?.footer_handle_radius ?? 14)}px;
+            background: ${this.config["room-card-plus"]?.footer_handle_bg ?? 'transparent'};
+            transition: background-color 0.2s ease;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
+          }
+
+          .rcp-footer-handle:active {
+            opacity: 0.8;
+          }
+
+          .rcp-footer-handle ha-icon {
+            --mdc-icon-size: ${(this.config["room-card-plus"]?.footer_handle_icon_size ?? 20)}px;
+            color: ${this.config["room-card-plus"]?.footer_handle_icon_color ?? 'var(--primary-text-color)'};
+            opacity: 0.7;
+            transition: opacity 0.2s ease, transform 0.35s ease;
+          }
+
+          .rcp-footer-handle.rcp-drawer-open ha-icon {
+            transform: rotate(180deg);
+            opacity: 1;
+          }
+
+          .rcp-footer-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 99;
+            background: rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.35s ease;
+          }
+
+          .rcp-footer-overlay.rcp-drawer-open {
+            opacity: 1;
+            pointer-events: auto;
+          }
+
+          /* Clip wrapper sits flush at the card bottom edge */
+          .rcp-footer-clip {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            overflow: hidden;
+            pointer-events: none;
+            max-height: 70vh;
+          }
+
+          .rcp-footer-clip.rcp-drawer-open {
+            pointer-events: auto;
+          }
+
+          /* Drawer slides down into the clip area */
+          .rcp-footer-drawer {
+            background: ${this.config["room-card-plus"]?.footer_drawer_bg ?? 'var(--card-background-color, rgba(30,30,30,0.95))'};
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 0 0 ${(this.config["room-card-plus"]?.footer_drawer_radius ?? 22)}px ${(this.config["room-card-plus"]?.footer_drawer_radius ?? 22)}px;
+            padding: 12px 12px 16px 12px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+            transform: translateY(-100%);
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: transform;
+            touch-action: none;
+            overflow-y: auto;
+          }
+
+          .rcp-footer-drawer.rcp-drawer-open {
+            transform: translateY(0);
+          }
+
+          .rcp-footer-drawer.rcp-drawer-dragging {
+            transition: none;
+          }
+
+          .rcp-footer-drawer-grip {
+            width: 36px;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--primary-text-color);
+            opacity: 0.25;
+            margin: 12px auto 0 auto;
+          }
+
+          .rcp-footer-drawer-grid {
+            display: grid;
+            grid-template-columns: repeat(${this.config["room-card-plus"]?.footer_columns ?? 3}, 1fr);
+            gap: ${(this.config["room-card-plus"]?.footer_grid_gap ?? 10)}px;
+            justify-items: center;
+            align-items: start;
+          }
+
+          .rcp-footer-drawer-grid .bubble-sub-button {
+            height: ${(this.config["room-card-plus"]?.footer_button_size ?? 46)}px !important;
+            width: ${(this.config["room-card-plus"]?.footer_button_size ?? 46)}px !important;
+            min-width: ${(this.config["room-card-plus"]?.footer_button_size ?? 46)}px !important;
+            border-radius: ${(this.config["room-card-plus"]?.footer_button_radius ?? 30)}px !important;
           }
 
           ${(() => {
@@ -549,6 +771,237 @@ room-card-plus:
               cont.classList.toggle('room-card-plus-two-cols', btns.length > perCol);
             } catch (e) {
               console.error('[room-card-plus] sub-button layout error:', e);
+            }
+            return '';
+          })()}
+
+          ${(() => {
+            /* =============================
+               FOOTER DRAWER (opens DOWNWARD, uses BOTTOM sub-buttons)
+               ============================= */
+            try {
+              const cfg = this.config["room-card-plus"] || {};
+
+              const boolVal = (v, def) => {
+                if (v === undefined || v === null) return def;
+                if (typeof v === 'boolean') return v;
+                if (typeof v === 'string') {
+                  const s = v.trim().toLowerCase();
+                  return s === 'true' ? true : s === 'false' ? false : def;
+                }
+                return def;
+              };
+
+              const footerEnabled = boolVal(cfg.footer_enabled, false);
+
+              this._rcp_footer ??= {
+                initialized: false,
+                isOpen: false,
+                handleEl: null,
+                clipEl: null,
+                drawerEl: null,
+                overlayEl: null,
+                gridEl: null,
+                drawerHeight: 0,
+                movedButtons: false
+              };
+
+              const fc = this._rcp_footer;
+
+              /* Find the bubble-container (parent that needs overflow:visible) */
+              const bubbleContainer = card.closest('.bubble-container') || card.querySelector('.bubble-container') || card;
+
+              /* Bottom sub-buttons container */
+              const bottomSubCont = card.querySelector('.bubble-sub-button-bottom-container');
+
+              /* ---- If footer is disabled, tear down and restore ---- */
+              if (!footerEnabled) {
+                if (fc.initialized) {
+                  fc.handleEl?.remove();
+                  fc.clipEl?.remove();
+                  fc.overlayEl?.remove();
+                  bubbleContainer.classList.remove('rcp-footer-overflow', 'rcp-drawer-elevated');
+                  fc.initialized = false;
+                  fc.isOpen = false;
+                  fc.movedButtons = false;
+                }
+                return '';
+              }
+
+              /* ---- Toggle function (declared early so handlers can reference it) ---- */
+              const toggleDrawer = (open) => {
+                fc.isOpen = open;
+                fc.drawerEl.style.transform = '';
+
+                fc.clipEl.classList.toggle('rcp-drawer-open', open);
+                fc.drawerEl.classList.toggle('rcp-drawer-open', open);
+                fc.handleEl.classList.toggle('rcp-drawer-open', open);
+                fc.overlayEl.classList.toggle('rcp-drawer-open', open);
+
+                /* Elevate card z-index while open so drawer appears above sibling cards */
+                bubbleContainer.classList.toggle('rcp-drawer-elevated', open);
+              };
+
+              /* ---- First-time setup ---- */
+              if (!fc.initialized) {
+                const container = card.querySelector('.bubble-button-card') || card;
+
+                /* Make the card allow visible overflow */
+                bubbleContainer.classList.add('rcp-footer-overflow');
+
+                /* Overlay (fixed backdrop) — appended to outer container */
+                const overlay = document.createElement('div');
+                overlay.className = 'rcp-footer-overlay';
+                overlay.addEventListener('click', () => { toggleDrawer(false); }, { passive: true });
+                bubbleContainer.appendChild(overlay);
+                fc.overlayEl = overlay;
+
+                /* Handle (center-bottom icon) — appended to outer container */
+                const handle = document.createElement('div');
+                handle.className = 'rcp-footer-handle';
+                const handleIcon = document.createElement('ha-icon');
+                handleIcon.setAttribute('icon', cfg.footer_handle_icon || 'mdi:menu');
+                handle.appendChild(handleIcon);
+                bubbleContainer.appendChild(handle);
+                fc.handleEl = handle;
+
+                /* Clip wrapper — appended to outer container */
+                const clip = document.createElement('div');
+                clip.className = 'rcp-footer-clip';
+
+                /* Drawer panel inside clip */
+                const drawer = document.createElement('div');
+                drawer.className = 'rcp-footer-drawer';
+
+                const grid = document.createElement('div');
+                grid.className = 'rcp-footer-drawer-grid';
+                drawer.appendChild(grid);
+
+                const grip = document.createElement('div');
+                grip.className = 'rcp-footer-drawer-grip';
+                drawer.appendChild(grip);
+
+                clip.appendChild(drawer);
+                bubbleContainer.appendChild(clip);
+                fc.clipEl = clip;
+                fc.drawerEl = drawer;
+                fc.gridEl = grid;
+
+                /* ---- Handle: combined click + pull-to-open/close (touch) ---- */
+
+                let handleDrag = null;  /* { startY, moved } */
+
+                handle.addEventListener('touchstart', (e) => {
+                  handleDrag = { startY: e.touches[0].clientY, moved: false };
+
+                  /* Measure drawer height for drag calculation */
+                  drawer.style.transition = 'none';
+                  drawer.classList.add('rcp-drawer-open');
+                  fc.drawerHeight = drawer.offsetHeight || 200;
+                  if (!fc.isOpen) {
+                    drawer.classList.remove('rcp-drawer-open');
+                    drawer.style.transform = 'translateY(-100%)';
+                  }
+                }, { passive: true });
+
+                handle.addEventListener('touchmove', (e) => {
+                  if (!handleDrag) return;
+                  const currentY = e.touches[0].clientY;
+                  const delta = currentY - handleDrag.startY;
+                  if (Math.abs(delta) > 5) handleDrag.moved = true;
+
+                  if (!fc.isOpen) {
+                    /* Pulling DOWN to open: delta > 0 */
+                    const progress = Math.max(0, Math.min(1, delta / fc.drawerHeight));
+                    /* -100% → 0%: translate = -100 + progress*100 */
+                    drawer.style.transform = `translateY(${-100 + progress * 100}%)`;
+                  } else {
+                    /* Pulling UP to close: delta < 0 */
+                    const progress = Math.max(0, Math.min(1, -delta / fc.drawerHeight));
+                    /* 0% → -100% */
+                    drawer.style.transform = `translateY(${-progress * 100}%)`;
+                  }
+                }, { passive: true });
+
+                handle.addEventListener('touchend', (e) => {
+                  if (!handleDrag) return;
+                  const endY = e.changedTouches[0].clientY;
+                  const delta = endY - handleDrag.startY;
+                  const wasDrag = handleDrag.moved;
+                  handleDrag = null;
+
+                  drawer.style.transition = '';
+                  drawer.style.transform = '';
+
+                  if (wasDrag) {
+                    /* Determine by drag direction and threshold */
+                    if (!fc.isOpen && delta > 40) {
+                      toggleDrawer(true);
+                    } else if (fc.isOpen && delta < -40) {
+                      toggleDrawer(false);
+                    } else {
+                      /* Snap back to current state */
+                      toggleDrawer(fc.isOpen);
+                    }
+                  }
+                  /* If not a drag, let the click handler fire naturally */
+                }, { passive: true });
+
+                /* Click handler: toggle on tap (won't fire if drag was detected) */
+                handle.addEventListener('click', (e) => {
+                  e.stopPropagation();
+                  toggleDrawer(!fc.isOpen);
+                }, { passive: false });
+
+                /* ---- Drawer body: drag-up-to-close (touch) ---- */
+                let drawerDrag = null;
+
+                drawer.addEventListener('touchstart', (e) => {
+                  drawerDrag = { startY: e.touches[0].clientY };
+                  drawer.classList.add('rcp-drawer-dragging');
+                }, { passive: true });
+
+                drawer.addEventListener('touchmove', (e) => {
+                  if (!drawerDrag) return;
+                  const currentY = e.touches[0].clientY;
+                  const delta = drawerDrag.startY - currentY; /* positive = dragging up */
+                  if (delta > 0) {
+                    drawer.style.transform = `translateY(-${delta}px)`;
+                  }
+                }, { passive: true });
+
+                drawer.addEventListener('touchend', (e) => {
+                  if (!drawerDrag) return;
+                  drawer.classList.remove('rcp-drawer-dragging');
+                  const delta = drawerDrag.startY - e.changedTouches[0].clientY;
+                  drawerDrag = null;
+
+                  if (delta > 60) {
+                    toggleDrawer(false);
+                  } else {
+                    drawer.style.transform = '';
+                  }
+                }, { passive: true });
+
+                fc.initialized = true;
+              }
+
+              /* ---- Move BOTTOM sub-buttons into drawer grid ---- */
+              if (bottomSubCont && fc.gridEl) {
+                const btns = bottomSubCont.querySelectorAll('.bubble-sub-button');
+                const currentCount = fc.gridEl.querySelectorAll('.bubble-sub-button').length;
+
+                if (btns.length > 0 && btns.length !== currentCount) {
+                  fc.gridEl.innerHTML = '';
+                  btns.forEach(btn => {
+                    fc.gridEl.appendChild(btn);
+                  });
+                  fc.movedButtons = true;
+                }
+              }
+
+            } catch (e) {
+              console.error('[room-card-plus] footer drawer error:', e);
             }
             return '';
           })()}
@@ -925,6 +1378,91 @@ room-card-plus:
             number:
               min: 0
               max: 30
+              step: 1
+    - type: expandable
+      title: Footer Drawer
+      icon: mdi:arrow-collapse-up
+      schema:
+        - name: footer_enabled
+          label: Enable footer drawer
+          default: false
+          selector:
+            boolean: {}
+        - name: footer_handle_icon
+          label: Handle icon
+          default: mdi:menu
+          selector:
+            icon: {}
+        - name: footer_handle_icon_size
+          label: Handle icon size (px)
+          default: 20
+          selector:
+            number:
+              min: 14
+              max: 32
+              step: 1
+        - name: footer_handle_icon_color
+          label: Handle icon color
+          default: var(--primary-text-color)
+          selector:
+            text: {}
+        - name: footer_handle_radius
+          label: Handle corner radius (px)
+          default: 14
+          selector:
+            number:
+              min: 0
+              max: 24
+              step: 1
+        - name: footer_handle_bg
+          label: Handle background color (css)
+          default: transparent
+          selector:
+            text: {}
+        - name: footer_drawer_bg
+          label: Drawer background color (css)
+          default: var(--card-background-color, rgba(30,30,30,0.95))
+          selector:
+            text: {}
+        - name: footer_drawer_radius
+          label: Drawer corner radius (px)
+          default: 22
+          selector:
+            number:
+              min: 0
+              max: 40
+              step: 1
+        - name: footer_columns
+          label: Grid columns
+          default: 3
+          selector:
+            number:
+              min: 2
+              max: 6
+              step: 1
+        - name: footer_grid_gap
+          label: Grid gap (px)
+          default: 10
+          selector:
+            number:
+              min: 4
+              max: 24
+              step: 1
+        - name: footer_button_size
+          label: Button size in drawer (px)
+          default: 46
+          selector:
+            number:
+              min: 28
+              max: 64
+              step: 1
+        - name: footer_button_radius
+          label: Button radius in drawer (px)
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 32
               step: 1
     - type: expandable
       title: State entities
