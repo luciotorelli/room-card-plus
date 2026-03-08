@@ -1,6 +1,6 @@
 room-card-plus:
   name: Room Card Plus
-  version: v1.1.1
+  version: v1.1.0
   creator: Lucio
   link: https://github.com/Clooos/Bubble-Card/discussions/1919
   supported:
@@ -164,6 +164,16 @@ room-card-plus:
           .bubble-sub-button.hidden {
             display: none !important;
           }
+
+          /* Optional on/off color overrides for main (top) sub-buttons */
+          ${this.config["room-card-plus"]?.main_sb_off_color ? `
+          .bubble-sub-button-container .bubble-sub-button.background-off {
+            background-color: ${this.config["room-card-plus"].main_sb_off_color} !important;
+          }` : ''}
+          ${this.config["room-card-plus"]?.main_sb_on_color ? `
+          .bubble-sub-button-container .bubble-sub-button.background-on {
+            background-color: ${this.config["room-card-plus"].main_sb_on_color} !important;
+          }` : ''}
 
           .bubble-icon-container {
             grid-area: i;
@@ -432,6 +442,15 @@ room-card-plus:
             border-radius: ${(this.config["room-card-plus"]?.footer_button_radius ?? 30)}px !important;
           }
 
+          /* Configurable on/off colors for footer (bottom) sub-buttons */
+          .rcp-footer-drawer-grid .bubble-sub-button.background-off {
+            background-color: ${this.config["room-card-plus"]?.footer_sb_off_color ?? '#1c1111'} !important;
+          }
+          ${this.config["room-card-plus"]?.footer_sb_on_color ? `
+          .rcp-footer-drawer-grid .bubble-sub-button.background-on {
+            background-color: ${this.config["room-card-plus"].footer_sb_on_color} !important;
+          }` : ''}
+
           ${(() => {
             try {
               const cfg = this.config["room-card-plus"] || {};
@@ -582,81 +601,110 @@ room-card-plus:
                  MAIN ICON (icon + color + background)
                  ============================= */
 
-              this._rcp_main_cache ??= { defaultIcon: null };
+              this._rcp_main_cache ??= { defaultIcon: null, lastState: null, observer: null };
 
               const mainIconEl = card.querySelector('.bubble-main-icon') || icon || null;
               const mainIconContainer = card.querySelector('.bubble-main-icon-container') || null;
               const iconBgEl = card.querySelector('.bubble-icon-container') || null;
 
+              /* Reusable function to apply all icon/color/animation/background state */
+              const applyIconState = (state) => {
+                if (!state) return;
+                const mel = card.querySelector('.bubble-main-icon') || icon || null;
+                const mcont = card.querySelector('.bubble-main-icon-container') || null;
+                const bgEl = card.querySelector('.bubble-icon-container') || null;
+
+                if (mel) {
+                  if (state.icon) {
+                    if (mel.icon !== state.icon) mel.icon = state.icon;
+                    if (mel.getAttribute?.('icon') !== state.icon) mel.setAttribute('icon', state.icon);
+                  }
+                  if (state.color) {
+                    card.style.setProperty('--bubble-icon-color', state.color, 'important');
+                    card.style.setProperty('--paper-item-icon-color', state.color, 'important');
+                    card.style.setProperty('--mdc-icon-button-icon-color', state.color, 'important');
+                    mel.style.setProperty('color', state.color, 'important');
+                    if (mcont) mcont.style.setProperty('color', state.color, 'important');
+                  } else {
+                    card.style.setProperty('--bubble-icon-color', 'initial', 'important');
+                    card.style.setProperty('--paper-item-icon-color', 'initial', 'important');
+                    card.style.setProperty('--mdc-icon-button-icon-color', 'initial', 'important');
+                    mel.style.removeProperty('color');
+                    if (mcont) mcont.style.removeProperty('color');
+                  }
+                  if (state.anim) {
+                    mel.style.setProperty('animation', state.anim, 'important');
+                    mel.style.setProperty('display', 'inline-block', 'important');
+                  } else {
+                    mel.style.removeProperty('animation');
+                  }
+                  mel.style.setProperty('--mdc-icon-size', `${state.size}px`, 'important');
+                }
+                if (bgEl && state.bg) {
+                  bgEl.style.setProperty('background-color', state.bg, 'important');
+                }
+              };
+
+              /* Compute current state */
+              let currentIconState = null;
+
               if (mainIconEl) {
-                // Store default Bubble icon once
                 if (!this._rcp_main_cache.defaultIcon) {
                   const cfgIcon = (this.config?.icon || '').trim();
                   const domIcon = mainIconEl.icon || mainIconEl.getAttribute?.('icon') || '';
                   this._rcp_main_cache.defaultIcon = cfgIcon || domIcon || null;
                 }
 
-                // ICON rules
                 const testIcon = (cfg.main_icon_test_icon || '').trim();
                 const ruleIcon = firstMatch(cfg.main_icon_icon_rules, 'icon');
                 const finalIcon = testIcon || ruleIcon || this._rcp_main_cache.defaultIcon || '';
 
-                if (finalIcon) {
-                  if (mainIconEl.icon !== finalIcon) mainIconEl.icon = finalIcon;
-                  if (mainIconEl.getAttribute?.('icon') !== finalIcon) mainIconEl.setAttribute('icon', finalIcon);
-                }
-
-                // COLOR rules (forced)
                 const ruleColorRaw = firstMatch(cfg.main_icon_color_rules, 'color');
                 const ruleColor = normalizeColor(ruleColorRaw);
 
-                if (ruleColor) {
-                  card.style.setProperty('--bubble-icon-color', ruleColor, 'important');
-                  card.style.setProperty('--paper-item-icon-color', ruleColor, 'important');
-                  card.style.setProperty('--mdc-icon-button-icon-color', ruleColor, 'important');
-
-                  mainIconEl.style.setProperty('color', ruleColor, 'important');
-                  if (mainIconContainer) mainIconContainer.style.setProperty('color', ruleColor, 'important');
-                } else {
-                  card.style.setProperty('--bubble-icon-color', 'initial', 'important');
-                  card.style.setProperty('--paper-item-icon-color', 'initial', 'important');
-                  card.style.setProperty('--mdc-icon-button-icon-color', 'initial', 'important');
-
-                  mainIconEl.style.removeProperty('color');
-                  if (mainIconContainer) mainIconContainer.style.removeProperty('color');
-                }
-
-                // ANIMATION rules
                 const ruleAnimName = firstMatch(cfg.main_icon_animation_rules, 'animation');
                 const ruleAnimDur  = firstMatch(cfg.main_icon_animation_rules, 'duration');
                 const ruleAnim = animToCss(ruleAnimName, ruleAnimDur);
 
-                if (ruleAnim) {
-                  mainIconEl.style.setProperty('animation', ruleAnim, 'important');
-                  mainIconEl.style.setProperty('display', 'inline-block', 'important');
-                } else {
-                  mainIconEl.style.removeProperty('animation');
+                const size = Number(cfg.icon_size ?? 50);
+
+                let bgFinal = null;
+                if (iconBgEl) {
+                  const bgRuleRaw = firstMatch(cfg.main_icon_bg_color_rules, 'color');
+                  const bgBase = normalizeColor(bgRuleRaw || cfg.main_icon_bg_color || '#ffc47e');
+                  const offPct = Number(cfg.main_icon_bg_off_opacity ?? 20);
+                  const pct = clamp(offPct, 0, 100);
+                  const alpha = pct / 100;
+                  const ent = this.config?.entity;
+                  const st = ent ? hass.states?.[ent]?.state : null;
+                  const isOff = (st === 'off' || st === 'unavailable' || st === 'unknown');
+                  bgFinal = isOff ? applyOpacity(bgBase, alpha) : bgBase;
                 }
 
-                const size = Number(cfg.icon_size ?? 50);
-                mainIconEl.style.setProperty('--mdc-icon-size', `${size}px`, 'important');
+                currentIconState = { icon: finalIcon, color: ruleColor, anim: ruleAnim, size, bg: bgFinal };
+                this._rcp_main_cache.lastState = currentIconState;
               }
 
-              // MAIN ICON BACKGROUND rules
-              if (iconBgEl) {
-                const bgRuleRaw = firstMatch(cfg.main_icon_bg_color_rules, 'color');
-                const bgBase = normalizeColor(bgRuleRaw || cfg.main_icon_bg_color || '#ffc47e');
+              /* Apply current state */
+              applyIconState(currentIconState);
 
-                const offPct = Number(cfg.main_icon_bg_off_opacity ?? 20);
-                const pct = clamp(offPct, 0, 100);
-                const alpha = pct / 100;
-
-                const ent = this.config?.entity;
-                const st = ent ? hass.states?.[ent]?.state : null;
-                const isOff = (st === 'off' || st === 'unavailable' || st === 'unknown');
-
-                const bgFinal = isOff ? applyOpacity(bgBase, alpha) : bgBase;
-                iconBgEl.style.setProperty('background-color', bgFinal, 'important');
+              /* MutationObserver: reapply icon/color/animation when Bubble Card
+                 resets the icon element (navigation, popup, re-render).
+                 Re-entrancy guard prevents infinite loop (applyIconState sets
+                 styles which would trigger the observer again). */
+              if (!this._rcp_main_cache.observer && iconBgEl) {
+                const mc = this._rcp_main_cache;
+                mc._applying = false;
+                const obs = new MutationObserver(() => {
+                  if (mc._applying || !mc.lastState) return;
+                  mc._applying = true;
+                  requestAnimationFrame(() => {
+                    applyIconState(mc.lastState);
+                    mc._applying = false;
+                  });
+                });
+                obs.observe(iconBgEl, { childList: true, subtree: true, attributes: true, attributeFilter: ['icon', 'style'] });
+                mc.observer = obs;
               }
 
               /* =============================
@@ -1109,400 +1157,6 @@ room-card-plus:
               max: 60
               step: 1
     - type: expandable
-      title: Icon container
-      icon: mdi:palette
-      schema:
-        - name: icon_width
-          label: Container width (px)
-          default: 100
-          selector:
-            number:
-              min: 60
-              max: 180
-              step: 1
-        - name: icon_height
-          label: Container height (px)
-          default: 60
-          selector:
-            number:
-              min: 40
-              max: 140
-              step: 1
-        - name: icon_corner_style
-          label: Corner style
-          default: diagonal
-          selector:
-            select:
-              options:
-                - label: Diagonal (0 R 0 R)
-                  value: diagonal
-                - label: Rounded (all corners)
-                  value: rounded
-                - label: Square
-                  value: square
-        - name: icon_radius
-          label: Corner radius (px)
-          default: 32
-          selector:
-            number:
-              min: 0
-              max: 60
-              step: 1
-        - name: icon_radius_tl
-          label: Corner radius TL (px) — optional
-          selector:
-            number:
-              min: 0
-              max: 60
-              step: 1
-        - name: icon_radius_tr
-          label: Corner radius TR (px) — optional
-          selector:
-            number:
-              min: 0
-              max: 60
-              step: 1
-        - name: icon_radius_br
-          label: Corner radius BR (px) — optional
-          selector:
-            number:
-              min: 0
-              max: 60
-              step: 1
-        - name: icon_radius_bl
-          label: Corner radius BL (px) — optional
-          selector:
-            number:
-              min: 0
-              max: 60
-              step: 1
-        - name: main_icon_bg_color
-          label: Background color (hex/css/ui_color)
-          default: '#ffc47e'
-          selector:
-            text: {}
-        - name: main_icon_bg_off_opacity
-          label: Background opacity when main entity is OFF (%)
-          default: 20
-          selector:
-            number:
-              min: 0
-              max: 100
-              step: 1
-    - type: expandable
-      title: Icon container positioning
-      icon: mdi:cursor-move
-      schema:
-        - name: icon_left
-          label: Container left offset (px)
-          default: -12
-          selector:
-            number:
-              min: -80
-              max: 40
-              step: 1
-        - name: icon_bottom
-          label: Container bottom offset (px)
-          default: -10
-          selector:
-            number:
-              min: -80
-              max: 40
-              step: 1
-    - type: expandable
-      title: Icon positioning
-      icon: mdi:image-move
-      schema:
-        - name: icon_size
-          label: Icon size (px)
-          default: 50
-          selector:
-            number:
-              min: 24
-              max: 80
-              step: 1
-        - name: icon_offset_x
-          label: Horizontal offset (px)
-          default: 0
-          selector:
-            number:
-              min: -30
-              max: 30
-              step: 1
-        - name: icon_offset_y
-          label: Vertical offset (px)
-          default: 0
-          selector:
-            number:
-              min: -30
-              max: 30
-              step: 1
-        - name: icon_color
-          label: Icon color (default)
-          default: '#1c1c1c'
-          selector:
-            text: {}
-        - name: main_icon_test_icon
-          label: Test icon override (forces icon)
-          selector:
-            icon: {}
-    - type: expandable
-      title: Main Icon rules
-      icon: mdi:shield-star-outline
-      schema:
-        - name: main_icon_icon_rules
-          label: Icon rules (optional)
-          selector:
-            object:
-              multiple: true
-              fields:
-                name:
-                  label: Rule name (optional)
-                  selector:
-                    text: {}
-                condition:
-                  label: Condition (optional)
-                  selector:
-                    condition: {}
-                icon:
-                  label: Icon
-                  selector:
-                    icon: {}
-                stop:
-                  label: Stop after match
-                  default: true
-                  selector:
-                    boolean: {}
-        - name: main_icon_color_rules
-          label: Color rules (optional)
-          selector:
-            object:
-              multiple: true
-              fields:
-                name:
-                  label: Rule name (optional)
-                  selector:
-                    text: {}
-                condition:
-                  label: Condition (optional)
-                  selector:
-                    condition: {}
-                color:
-                  label: Color (hex/css or ui_color name)
-                  selector:
-                    text: {}
-                stop:
-                  label: Stop after match
-                  default: true
-                  selector:
-                    boolean: {}
-        - name: main_icon_animation_rules
-          label: Animation rules (optional)
-          selector:
-            object:
-              multiple: true
-              fields:
-                name:
-                  label: Rule name (optional)
-                  selector:
-                    text: {}
-                condition:
-                  label: Condition (optional)
-                  selector:
-                    condition: {}
-                animation:
-                  label: Animation
-                  selector:
-                    select:
-                      options:
-                        - label: None
-                          value: none
-                        - label: Pulse
-                          value: pulse
-                        - label: Ping
-                          value: ping
-                        - label: Spin
-                          value: spin
-                        - label: Bounce
-                          value: bounce
-                duration:
-                  label: Duration (seconds)
-                  default: 1.2
-                  selector:
-                    number:
-                      min: 0.3
-                      max: 5
-                      step: 0.1
-                stop:
-                  label: Stop after match
-                  default: true
-                  selector:
-                    boolean: {}
-    - type: expandable
-      title: Main Icon background rules
-      icon: mdi:palette-swatch
-      schema:
-        - name: main_icon_bg_color_rules
-          label: Background color rules (optional)
-          selector:
-            object:
-              multiple: true
-              fields:
-                name:
-                  label: Rule name (optional)
-                  selector:
-                    text: {}
-                condition:
-                  label: Condition (optional)
-                  selector:
-                    condition: {}
-                color:
-                  label: Background color (hex/css or ui_color name)
-                  selector:
-                    text: {}
-                stop:
-                  label: Stop after match
-                  default: true
-                  selector:
-                    boolean: {}
-    - type: expandable
-      title: Sub-button Layout
-      icon: mdi:dots-vertical
-      schema:
-        - name: sub_button_size
-          label: Sub-button size (px)
-          default: 32
-          selector:
-            number:
-              min: 28
-              max: 60
-              step: 1
-        - name: sub_button_gap
-          label: Gap between sub-buttons (px)
-          default: 10
-          selector:
-            number:
-              min: 0
-              max: 24
-              step: 1
-        - name: sub_button_radius
-          label: Sub-button radius (px)
-          default: 30
-          selector:
-            number:
-              min: 0
-              max: 30
-              step: 1
-        - name: sub_buttons_per_column
-          label: Buttons per column
-          default: 3
-          selector:
-            number:
-              min: 1
-              max: 8
-              step: 1
-        - name: sub_button_column_gap
-          label: Column gap (px)
-          default: 8
-          selector:
-            number:
-              min: 0
-              max: 24
-              step: 1
-        - name: sub_button_left_shift
-          label: Left shift when 2 columns (px)
-          default: 6
-          selector:
-            number:
-              min: 0
-              max: 30
-              step: 1
-    - type: expandable
-      title: Footer Drawer
-      icon: mdi:arrow-collapse-up
-      schema:
-        - name: footer_enabled
-          label: Enable footer drawer
-          default: false
-          selector:
-            boolean: {}
-        - name: footer_handle_icon
-          label: Handle icon
-          default: mdi:menu
-          selector:
-            icon: {}
-        - name: footer_handle_icon_size
-          label: Handle icon size (px)
-          default: 20
-          selector:
-            number:
-              min: 14
-              max: 32
-              step: 1
-        - name: footer_handle_icon_color
-          label: Handle icon color
-          default: var(--primary-text-color)
-          selector:
-            text: {}
-        - name: footer_handle_radius
-          label: Handle corner radius (px)
-          default: 14
-          selector:
-            number:
-              min: 0
-              max: 24
-              step: 1
-        - name: footer_handle_bg
-          label: Handle background color (css)
-          default: transparent
-          selector:
-            text: {}
-        - name: footer_drawer_bg
-          label: Drawer background color (css)
-          default: var(--card-background-color, rgba(30,30,30,0.95))
-          selector:
-            text: {}
-        - name: footer_drawer_radius
-          label: Drawer corner radius (px)
-          default: 22
-          selector:
-            number:
-              min: 0
-              max: 40
-              step: 1
-        - name: footer_columns
-          label: Grid columns
-          default: 3
-          selector:
-            number:
-              min: 2
-              max: 6
-              step: 1
-        - name: footer_grid_gap
-          label: Grid gap (px)
-          default: 10
-          selector:
-            number:
-              min: 4
-              max: 24
-              step: 1
-        - name: footer_button_size
-          label: Button size in drawer (px)
-          default: 46
-          selector:
-            number:
-              min: 28
-              max: 64
-              step: 1
-        - name: footer_button_radius
-          label: Button radius in drawer (px)
-          default: 30
-          selector:
-            number:
-              min: 0
-              max: 32
-              step: 1
-    - type: expandable
       title: State entities
       icon: mdi:information-outline
       schema:
@@ -1675,3 +1329,412 @@ room-card-plus:
                             boolean: {}
               label_field: name
               description_field: entity
+    - type: expandable
+      title: Main Icon Styling & Positioning
+      icon: mdi:emoticon-outline
+      schema:
+        - type: constant
+          label: "─── Icon Container ───"
+        - name: icon_width
+          label: Container width (px)
+          default: 100
+          selector:
+            number:
+              min: 60
+              max: 180
+              step: 1
+        - name: icon_height
+          label: Container height (px)
+          default: 60
+          selector:
+            number:
+              min: 40
+              max: 140
+              step: 1
+        - name: icon_corner_style
+          label: Corner style
+          default: diagonal
+          selector:
+            select:
+              options:
+                - label: Diagonal (0 R 0 R)
+                  value: diagonal
+                - label: Rounded (all corners)
+                  value: rounded
+                - label: Square
+                  value: square
+        - name: icon_radius
+          label: Corner radius (px)
+          default: 32
+          selector:
+            number:
+              min: 0
+              max: 60
+              step: 1
+        - name: icon_radius_tl
+          label: Corner radius TL (px) — optional
+          selector:
+            number:
+              min: 0
+              max: 60
+              step: 1
+        - name: icon_radius_tr
+          label: Corner radius TR (px) — optional
+          selector:
+            number:
+              min: 0
+              max: 60
+              step: 1
+        - name: icon_radius_br
+          label: Corner radius BR (px) — optional
+          selector:
+            number:
+              min: 0
+              max: 60
+              step: 1
+        - name: icon_radius_bl
+          label: Corner radius BL (px) — optional
+          selector:
+            number:
+              min: 0
+              max: 60
+              step: 1
+        - name: main_icon_bg_color
+          label: Background color (hex/css/ui_color)
+          default: '#ffc47e'
+          selector:
+            text: {}
+        - name: main_icon_bg_off_opacity
+          label: Background opacity when entity is OFF (%)
+          default: 20
+          selector:
+            number:
+              min: 0
+              max: 100
+              step: 1
+        - type: constant
+          label: "─── Icon Container Positioning ───"
+        - name: icon_left
+          label: Container left offset (px)
+          default: -12
+          selector:
+            number:
+              min: -80
+              max: 40
+              step: 1
+        - name: icon_bottom
+          label: Container bottom offset (px)
+          default: -10
+          selector:
+            number:
+              min: -80
+              max: 40
+              step: 1
+        - type: constant
+          label: "─── Icon Positioning ───"
+        - name: icon_size
+          label: Icon size (px)
+          default: 50
+          selector:
+            number:
+              min: 24
+              max: 80
+              step: 1
+        - name: icon_offset_x
+          label: Horizontal offset (px)
+          default: 0
+          selector:
+            number:
+              min: -30
+              max: 30
+              step: 1
+        - name: icon_offset_y
+          label: Vertical offset (px)
+          default: 0
+          selector:
+            number:
+              min: -30
+              max: 30
+              step: 1
+        - name: icon_color
+          label: Icon color (default)
+          default: '#1c1c1c'
+          selector:
+            text: {}
+        - name: main_icon_test_icon
+          label: Test icon override (forces icon)
+          selector:
+            icon: {}
+    - type: expandable
+      title: Main Icon Rules
+      icon: mdi:shield-star-outline
+      schema:
+        - name: main_icon_icon_rules
+          label: Icon rules (optional)
+          selector:
+            object:
+              multiple: true
+              fields:
+                name:
+                  label: Rule name (optional)
+                  selector:
+                    text: {}
+                condition:
+                  label: Condition (optional)
+                  selector:
+                    condition: {}
+                icon:
+                  label: Icon
+                  selector:
+                    icon: {}
+                stop:
+                  label: Stop after match
+                  default: true
+                  selector:
+                    boolean: {}
+        - name: main_icon_color_rules
+          label: Color rules (optional)
+          selector:
+            object:
+              multiple: true
+              fields:
+                name:
+                  label: Rule name (optional)
+                  selector:
+                    text: {}
+                condition:
+                  label: Condition (optional)
+                  selector:
+                    condition: {}
+                color:
+                  label: Color (hex/css or ui_color name)
+                  selector:
+                    text: {}
+                stop:
+                  label: Stop after match
+                  default: true
+                  selector:
+                    boolean: {}
+        - name: main_icon_animation_rules
+          label: Animation rules (optional)
+          selector:
+            object:
+              multiple: true
+              fields:
+                name:
+                  label: Rule name (optional)
+                  selector:
+                    text: {}
+                condition:
+                  label: Condition (optional)
+                  selector:
+                    condition: {}
+                animation:
+                  label: Animation
+                  selector:
+                    select:
+                      options:
+                        - label: None
+                          value: none
+                        - label: Pulse
+                          value: pulse
+                        - label: Ping
+                          value: ping
+                        - label: Spin
+                          value: spin
+                        - label: Bounce
+                          value: bounce
+                duration:
+                  label: Duration (seconds)
+                  default: 1.2
+                  selector:
+                    number:
+                      min: 0.3
+                      max: 5
+                      step: 0.1
+                stop:
+                  label: Stop after match
+                  default: true
+                  selector:
+                    boolean: {}
+        - name: main_icon_bg_color_rules
+          label: Background color rules (optional)
+          selector:
+            object:
+              multiple: true
+              fields:
+                name:
+                  label: Rule name (optional)
+                  selector:
+                    text: {}
+                condition:
+                  label: Condition (optional)
+                  selector:
+                    condition: {}
+                color:
+                  label: Background color (hex/css or ui_color name)
+                  selector:
+                    text: {}
+                stop:
+                  label: Stop after match
+                  default: true
+                  selector:
+                    boolean: {}
+    - type: expandable
+      title: Main Sub-button Layout
+      icon: mdi:dots-vertical
+      schema:
+        - name: sub_button_size
+          label: Sub-button size (px)
+          default: 32
+          selector:
+            number:
+              min: 28
+              max: 60
+              step: 1
+        - name: sub_button_gap
+          label: Gap between sub-buttons (px)
+          default: 10
+          selector:
+            number:
+              min: 0
+              max: 24
+              step: 1
+        - name: sub_button_radius
+          label: Sub-button radius (px)
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 30
+              step: 1
+        - name: sub_buttons_per_column
+          label: Buttons per column
+          default: 3
+          selector:
+            number:
+              min: 1
+              max: 8
+              step: 1
+        - name: sub_button_column_gap
+          label: Column gap (px)
+          default: 8
+          selector:
+            number:
+              min: 0
+              max: 24
+              step: 1
+        - name: sub_button_left_shift
+          label: Left shift when 2 columns (px)
+          default: 6
+          selector:
+            number:
+              min: 0
+              max: 30
+              step: 1
+        - name: main_sb_off_color
+          label: Off background color override (hex/css)
+          selector:
+            text: {}
+        - name: main_sb_on_color
+          label: On background color override (hex/css)
+          selector:
+            text: {}
+    - type: expandable
+      title: Bottom Sub-buttons Layout
+      icon: mdi:dots-horizontal
+      schema:
+        - name: footer_button_size
+          label: Button size (px)
+          default: 46
+          selector:
+            number:
+              min: 28
+              max: 64
+              step: 1
+        - name: footer_button_radius
+          label: Button radius (px)
+          default: 30
+          selector:
+            number:
+              min: 0
+              max: 32
+              step: 1
+        - name: footer_columns
+          label: Grid columns
+          default: 3
+          selector:
+            number:
+              min: 2
+              max: 6
+              step: 1
+        - name: footer_grid_gap
+          label: Grid gap (px)
+          default: 10
+          selector:
+            number:
+              min: 4
+              max: 24
+              step: 1
+        - name: footer_sb_off_color
+          label: Off background color
+          default: '#1c1111'
+          selector:
+            text: {}
+        - name: footer_sb_on_color
+          label: On background color override (hex/css)
+          selector:
+            text: {}
+    - type: expandable
+      title: Footer Drawer
+      icon: mdi:arrow-collapse-up
+      schema:
+        - name: footer_enabled
+          label: Enable footer drawer
+          default: false
+          selector:
+            boolean: {}
+        - name: footer_handle_icon
+          label: Handle icon
+          default: mdi:menu
+          selector:
+            icon: {}
+        - name: footer_handle_icon_size
+          label: Handle icon size (px)
+          default: 20
+          selector:
+            number:
+              min: 14
+              max: 32
+              step: 1
+        - name: footer_handle_icon_color
+          label: Handle icon color
+          default: var(--primary-text-color)
+          selector:
+            text: {}
+        - name: footer_handle_radius
+          label: Handle corner radius (px)
+          default: 14
+          selector:
+            number:
+              min: 0
+              max: 24
+              step: 1
+        - name: footer_handle_bg
+          label: Handle background color (css)
+          default: transparent
+          selector:
+            text: {}
+        - name: footer_drawer_bg
+          label: Drawer background color (css)
+          default: var(--card-background-color, rgba(30,30,30,0.95))
+          selector:
+            text: {}
+        - name: footer_drawer_radius
+          label: Drawer corner radius (px)
+          default: 22
+          selector:
+            number:
+              min: 0
+              max: 40
+              step: 1
