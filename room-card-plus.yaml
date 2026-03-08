@@ -1,6 +1,6 @@
 room-card-plus:
   name: Room Card Plus
-  version: v1.1.0
+  version: v1.1.1
   creator: Lucio
   link: https://github.com/Clooos/Bubble-Card/discussions/1919
   supported:
@@ -687,7 +687,7 @@ room-card-plus:
               }
 
               const hasMarker = stateEl.querySelector?.('.room-card-plus-state-marker');
-              this._sc_state_cache ??= { lastSig: '', lastHtml: '' };
+              this._sc_state_cache ??= { lastSig: '', lastHtml: '', observer: null };
 
               const mustRebuild = (!hasMarker);
               if (!mustRebuild && sig2 && sig2 === this._sc_state_cache.lastSig) return '';
@@ -751,9 +751,26 @@ room-card-plus:
                 `<span class="room-card-plus-state-marker" style="display:none;"></span>` +
                 items.map(i => i.html).join(`<span style="display:inline-block; width:${gapPx}px;"></span>`);
 
-              if (html !== this._sc_state_cache.lastHtml) {
+              /* Force-write if marker was missing (Bubble Card overwrote our content)
+                 OR if the HTML actually changed (entity state updated) */
+              if (mustRebuild || html !== this._sc_state_cache.lastHtml) {
                 this._sc_state_cache.lastHtml = html;
                 stateEl.innerHTML = html || '';
+              }
+
+              /* MutationObserver: re-apply cached HTML whenever Bubble Card
+                 overwrites .bubble-state (navigation, popup, re-render).
+                 Only one observer per card lifetime. */
+              if (!this._sc_state_cache.observer && stateEl) {
+                const cache = this._sc_state_cache;
+                const obs = new MutationObserver(() => {
+                  if (!cache.lastHtml) return;
+                  if (!stateEl.querySelector('.room-card-plus-state-marker')) {
+                    stateEl.innerHTML = cache.lastHtml;
+                  }
+                });
+                obs.observe(stateEl, { childList: true, characterData: true, subtree: true });
+                cache.observer = obs;
               }
 
             } catch (e) {
