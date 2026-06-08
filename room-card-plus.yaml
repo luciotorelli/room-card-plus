@@ -795,9 +795,17 @@ room-card-plus:
 
               items.sort((a,b) => a.order - b.order);
 
+              const sepRaw = (cfg.state_separator ?? '').toString();
+              const sep = sepRaw.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+              const sepGapL = Number(cfg.state_separator_gap_left ?? 6);
+              const sepGapR = Number(cfg.state_separator_gap_right ?? 6);
+              const joiner = sep
+                ? `<span class="room-card-plus-state-sep" style="display:inline-flex; align-items:center; padding-left:${sepGapL}px; padding-right:${sepGapR}px; opacity:0.5; user-select:none;">${sep}</span>`
+                : `<span style="display:inline-block; width:${gapPx}px;"></span>`;
+
               const html =
                 `<span class="room-card-plus-state-marker" style="display:none;"></span>` +
-                items.map(i => i.html).join(`<span style="display:inline-block; width:${gapPx}px;"></span>`);
+                items.map(i => i.html).join(joiner);
 
               /* Force-write if marker was missing (Bubble Card overwrote our content)
                  OR if the HTML actually changed (entity state updated) */
@@ -1163,6 +1171,26 @@ room-card-plus:
         - name: state_multi_gap
           label: Gap between state entities (px)
           default: 0
+          selector:
+            number:
+              min: 0
+              max: 24
+              step: 1
+        - name: state_separator
+          label: Separator between states (e.g. · or |, leave empty for none)
+          selector:
+            text:
+        - name: state_separator_gap_left
+          label: Gap left of separator (px)
+          default: 6
+          selector:
+            number:
+              min: 0
+              max: 24
+              step: 1
+        - name: state_separator_gap_right
+          label: Gap right of separator (px)
+          default: 6
           selector:
             number:
               min: 0
