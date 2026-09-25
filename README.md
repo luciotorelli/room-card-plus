@@ -43,3 +43,23 @@ This makes it easy to replace a single state string with a rich, highly customiz
 
 If you enjoy using this module and want to support its development:  
 👉 https://buymeacoffee.com/luciotorelli
+
+## New in v1.3.0 / v1.3.1
+
+| Option | What it does |
+|---|---|
+| `sub_button_width` | Sub-button width in px. Set it larger than `sub_button_size` for pill-shaped buttons. It also gives inline slider sub-buttons room, and they now always stay inside the card. |
+| `icon_corner_style: circle` | Draws the icon background as a true circle (height follows `icon_width`) with the icon centred. `icon_offset_x` / `icon_offset_y` still nudge it. |
+| `state_two_lines` | Shows each entity state on its own line. |
+| `sub_button_animation_rules` | Animates sub-button icons. Each rule has `button` (1 = first), an optional `condition`, `animation` (`pulse`, `ping`, `spin`, `bounce`, `none`) and `duration` in seconds. The first matching rule per button wins. |
+| `footer_drawer_shadow` | CSS `box-shadow` for the footer drawer. Use `none` on light themes. |
+| `title_wrap` | Wraps long titles onto two lines. |
+
+**Behaviour changes**
+- Bottom sub-buttons now open the footer drawer by default (`footer_enabled` defaults to on when the card has bottom sub-buttons). Before, they broke the title and the top buttons.
+- State entities show even when `show_state` is off or the scrolling effect is disabled.
+- `card_radius` also rounds (or squares) Bubble's inner wrapper, so `card_radius: 0` gives truly square corners.
+- A matched background colour rule is no longer dimmed by the off-opacity.
+- Sub-button groups are laid out by the module's columns. Use `sub_buttons_per_column` to split rows.
+
+**Updates:** the Module Store only offers an update when the version number goes up, so every release bumps it.
