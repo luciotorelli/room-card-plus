@@ -2,7 +2,7 @@ room-card-plus:
   name: Room Card Plus
   version: v1.2.0
   creator: Lucio
-  link: https://github.com/Clooos/Bubble-Card/discussions/1919
+  link: https://github.com/Clooos/Bubble-Card/discussions/2113
   supported:
     - button
   description: |
@@ -26,8 +26,9 @@ room-card-plus:
           }
 
           .bubble-background,
+          .large .bubble-button-card,
           .large .bubble-container {
-            border-radius: ${(this.config["room-card-plus"]?.card_radius ?? 22) + 'px'};
+            border-radius: ${(this.config["room-card-plus"]?.card_radius ?? 22) + 'px'} !important;
           }
 
           .large .bubble-container { overflow: clip; }
@@ -82,6 +83,8 @@ room-card-plus:
 
           .bubble-state {
             grid-area: s;
+
+            ${(this.config["room-card-plus"]?.state_entities?.length ? "display: flex !important; align-items: center;" : "")}
             font-weight: 700;
             font-size: ${(this.config["room-card-plus"]?.state_size_em ?? 0.95)}em !important;
             line-height: 1.1;
