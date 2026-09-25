@@ -1,6 +1,6 @@
 room-card-plus:
   name: Room Card Plus
-  version: v1.3.2
+  version: v1.3.3
   creator: Lucio
   link: https://github.com/Clooos/Bubble-Card/discussions/2113
   supported:
@@ -255,6 +255,13 @@ room-card-plus:
               const px = v => (String(v).trim() !== '' && !isNaN(Number(v))) ? v + 'px' : v;
               return [tl,tr,br,bl].map((v,i) => (v === undefined || v === null || v === '') ? px(base[i]) : px(v)).join(' ');
             })()} !important;
+          }
+
+          /* Bubble Card paints a 20% overlay (::before) on the icon block and sub-buttons with its own
+             fixed radius; make it follow the shape we set so corners never show a notch */
+          .bubble-icon-container::before,
+          .bubble-sub-button::before {
+            border-radius: inherit !important;
           }
 
           .bubble-icon {
