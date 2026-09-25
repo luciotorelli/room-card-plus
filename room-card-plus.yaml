@@ -119,6 +119,17 @@ room-card-plus:
             display: inline-block;
           }
 
+          /* Bubble wraps sub-buttons in .bubble-sub-button-group (user groups, and an automatic group whenever bottom
+
+             sub-buttons exist). Flatten them so this module's column layout places every button (#8, drawer). */
+
+          .bubble-sub-button-container .bubble-sub-button-group {
+
+            display: contents !important;
+
+          }
+
+
           /* ===== Sub-button container (standard, non-footer mode) ===== */
           .bubble-sub-button-container {
             grid-area: b;
@@ -265,7 +276,7 @@ room-card-plus:
            * entire card layout (baseline alignment, flex wrapping, content container).
            * We must forcefully revert ALL of these side-effects.
            */
-          ${this.config["room-card-plus"]?.footer_enabled ? `
+          ${(this.config["room-card-plus"]?.footer_enabled ?? ((this.config.sub_button?.bottom || []).length > 0)) ? `
           .bubble-sub-button-bottom-container {
             display: none !important;
             position: absolute !important;
@@ -405,7 +416,7 @@ room-card-plus:
             -webkit-backdrop-filter: blur(16px);
             border-radius: 0 0 ${(this.config["room-card-plus"]?.footer_drawer_radius ?? 22)}px ${(this.config["room-card-plus"]?.footer_drawer_radius ?? 22)}px;
             padding: 12px 12px 16px 12px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+            box-shadow: ${this.config["room-card-plus"]?.footer_drawer_shadow ?? "0 4px 24px rgba(0,0,0,0.25)"};
             transform: translateY(-100%);
             transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
             will-change: transform;
@@ -681,7 +692,7 @@ room-card-plus:
                   const ent = this.config?.entity;
                   const st = ent ? hass.states?.[ent]?.state : null;
                   const isOff = (st === 'off' || st === 'unavailable' || st === 'unknown');
-                  bgFinal = isOff ? applyOpacity(bgBase, alpha) : bgBase;
+                  bgFinal = (isOff && !bgRuleRaw) ? applyOpacity(bgBase, alpha) : bgBase;
                 }
 
                 currentIconState = { icon: finalIcon, color: ruleColor, anim: ruleAnim, size, bg: bgFinal };
@@ -869,7 +880,7 @@ room-card-plus:
                 return def;
               };
 
-              const footerEnabled = boolVal(cfg.footer_enabled, false);
+              const footerEnabled = boolVal(cfg.footer_enabled, ((this.config.sub_button?.bottom || []).length > 0));
 
               this._rcp_footer ??= {
                 initialized: false,
@@ -1721,10 +1732,13 @@ room-card-plus:
       icon: mdi:arrow-collapse-up
       schema:
         - name: footer_enabled
-          label: Enable footer drawer
-          default: false
+          label: "Enable footer drawer (on by default when the card has bottom sub-buttons)"
           selector:
             boolean: {}
+        - name: footer_drawer_shadow
+          label: "Drawer shadow (CSS box-shadow; use none on light themes)"
+          selector:
+            text: {}
         - name: footer_handle_icon
           label: Handle icon
           default: mdi:menu
