@@ -1,6 +1,6 @@
 room-card-plus:
   name: Room Card Plus
-  version: v1.2.0
+  version: v1.3.0
   creator: Lucio
   link: https://github.com/Clooos/Bubble-Card/discussions/2113
   supported:
@@ -135,6 +135,7 @@ room-card-plus:
             grid-area: b;
 
             --slim-sb-size: ${(this.config["room-card-plus"]?.sub_button_size ?? 40) + 'px'};
+        --slim-sb-width: ${(this.config["room-card-plus"]?.sub_button_width ?? this.config["room-card-plus"]?.sub_button_size ?? 40) + 'px'};
             --slim-sb-gap: ${(this.config["room-card-plus"]?.sub_button_gap ?? 10) + 'px'};
             --slim-sb-radius: ${(this.config["room-card-plus"]?.sub_button_radius ?? 30) + 'px'};
             --slim-sb-per-col: ${(this.config["room-card-plus"]?.sub_buttons_per_column ?? 3)};
@@ -144,7 +145,7 @@ room-card-plus:
             display: grid !important;
             grid-auto-flow: column !important;
             grid-template-rows: repeat(var(--slim-sb-per-col), var(--slim-sb-size)) !important;
-            grid-auto-columns: var(--slim-sb-size) !important;
+            grid-auto-columns: var(--slim-sb-width) !important;
 
             row-gap: var(--slim-sb-gap) !important;
             column-gap: var(--slim-sb-col-gap) !important;
@@ -167,8 +168,10 @@ room-card-plus:
 
           .bubble-sub-button {
             height: var(--slim-sb-size) !important;
-            width: var(--slim-sb-size) !important;
-            min-width: var(--slim-sb-size) !important;
+            width: var(--slim-sb-width) !important;
+            min-width: var(--slim-sb-width) !important;
+            max-width: var(--slim-sb-width) !important;
+            box-sizing: border-box !important;
             border-radius: var(--slim-sb-radius) !important;
             display: flex !important;
             align-items: center;
@@ -177,6 +180,34 @@ room-card-plus:
 
           .bubble-sub-button.hidden {
             display: none !important;
+          }
+
+          /* Inline slider sub-buttons (always_visible): keep them inside the sub-button cell so they never overflow the card.
+
+             Give them room with sub_button_width (pills). */
+
+          .bubble-sub-button-container .bubble-sub-slider-wrapper.inline {
+
+            width: var(--slim-sb-width) !important;
+
+            max-width: var(--slim-sb-width) !important;
+
+            height: var(--slim-sb-size) !important;
+
+            overflow: hidden !important;
+
+            border-radius: var(--slim-sb-radius) !important;
+
+          }
+
+          .bubble-sub-button-container .bubble-sub-slider-wrapper.inline .bubble-sub-button-slider {
+
+            min-width: 0 !important;
+
+            width: 100% !important;
+
+            height: 100% !important;
+
           }
 
           /* Optional on/off color overrides for main (top) sub-buttons */
@@ -219,7 +250,8 @@ room-card-plus:
               const hasCustom = tl !== undefined || tr !== undefined || br !== undefined || bl !== undefined;
               if (hasCustom) return `${(tl ?? 0)}px ${(tr ?? 0)}px ${(br ?? 0)}px ${(bl ?? 0)}px`;
 
-              if (s === 'square') return `0px`;
+              if (s === 'circle') return `50%`;
+          if (s === 'square') return `0px`;
               if (s === 'rounded') return `${r}px`;
               return `0px ${r}px 0px ${r}px`;
             })()} !important;
@@ -236,7 +268,31 @@ room-card-plus:
             transform: translate(${(this.config["room-card-plus"]?.icon_offset_x ?? 0) + 'px'}, ${(this.config["room-card-plus"]?.icon_offset_y ?? 0) + 'px'});
           }
 
-          /* ===== FOOTER DRAWER STYLES ===== */
+          ${this.config["room-card-plus"]?.icon_corner_style === 'circle' ? `
+      /* Circle preset: a true circle (height follows width) with the icon centred; icon_offset_x/y still nudge it */
+      .bubble-icon-container {
+        height: ${(this.config["room-card-plus"]?.icon_width ?? 100) + 'px'} !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+      .bubble-icon-container .bubble-main-icon { margin: 0 !important; position: relative !important; inset: auto !important; }
+      ` : ''}
+
+      ${this.config["room-card-plus"]?.state_two_lines ? `
+      /* Entity states stacked one per line */
+      .bubble-state {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        white-space: normal !important;
+        gap: 2px;
+      }
+      .bubble-state .room-card-plus-state-sep { display: none !important; }
+      .bubble-state > span[style*="inline-block"]:not([class]) { display: none !important; }
+      ` : ''}
+
+      /* ===== FOOTER DRAWER STYLES ===== */
 
           /* Allow drawer to overflow below the card */
           .bubble-container.rcp-footer-overflow {
@@ -452,7 +508,7 @@ room-card-plus:
           .rcp-footer-drawer-grid .bubble-sub-button {
             height: ${(this.config["room-card-plus"]?.footer_button_size ?? 46)}px !important;
             width: ${(this.config["room-card-plus"]?.footer_button_size ?? 46)}px !important;
-            min-width: ${(this.config["room-card-plus"]?.footer_button_size ?? 46)}px !important;
+            min-width: ${(this.config["room-card-plus"]?.footer_button_size ?? 46)}px !important; max-width: ${(this.config["room-card-plus"]?.footer_button_size ?? 46)}px !important;
             border-radius: ${(this.config["room-card-plus"]?.footer_button_radius ?? 30)}px !important;
           }
 
@@ -720,6 +776,37 @@ room-card-plus:
                 obs.observe(iconBgEl, { childList: true, subtree: true, attributes: true, attributeFilter: ['icon', 'style'] });
                 mc.observer = obs;
               }
+
+              /* Sub-button icon animations: sub_button_animation_rules [{button (1-based), condition, animation, duration}] */
+
+              try {
+
+                const sbRules = toRulesArray(cfg.sub_button_animation_rules);
+
+                if (sbRules.length || this._rcp_sb_anim) {
+
+                  const want = {};
+
+                  sbRules.forEach(r => { const n = Number(r?.button); if (!n || want[n] !== undefined) return; if (checkAllConditions(r.condition)) want[n] = animToCss(r.animation, r.duration); });
+
+                  card.querySelectorAll('.bubble-sub-button').forEach(b => {
+
+                    const k = [...b.classList].find(c => /^bubble-sub-button-\d+$/.test(c)); if (!k) return;
+
+                    const ic = b.querySelector('ha-icon'); if (!ic) return;
+
+                    const a = want[Number(k.split('-').pop())] || '';
+
+                    if (a) { if (ic.style.animation !== a) ic.style.setProperty('animation', a); } else if (ic.style.animation) ic.style.removeProperty('animation');
+
+                  });
+
+                  this._rcp_sb_anim = sbRules.length > 0;
+
+                }
+
+              } catch (e) { console.error('[room-card-plus] sub-button animation error:', e); }
+
 
               /* =============================
                  STATE ENTITIES
@@ -1190,6 +1277,10 @@ room-card-plus:
               min: 0
               max: 24
               step: 1
+        - name: state_two_lines
+          label: "Show entity states one per line"
+          selector:
+            boolean: {}
         - name: state_separator
           label: Separator between states (e.g. · or |, leave empty for none)
           selector:
@@ -1405,6 +1496,8 @@ room-card-plus:
                   value: rounded
                 - label: Square
                   value: square
+                - label: Circle (icon centred)
+                  value: circle
         - name: icon_radius
           label: Corner radius (px)
           default: 32
@@ -1642,6 +1735,10 @@ room-card-plus:
               min: 0
               max: 24
               step: 1
+        - name: sub_button_width
+          label: "Sub-button width (px) - wider than the size makes pills; also keeps slider sub-buttons inside the card"
+          selector:
+            number: {min: 20, max: 200, step: 1, mode: box}
         - name: sub_button_radius
           label: Sub-button radius (px)
           default: 30
@@ -1674,6 +1771,29 @@ room-card-plus:
               min: 0
               max: 30
               step: 1
+        - name: sub_button_animation_rules
+          label: "Sub-button icon animations (optional)"
+          selector:
+            object:
+              multiple: true
+              fields:
+                button:
+                  label: "Sub-button number (1 = first)"
+                  selector:
+                    number: {min: 1, max: 20, step: 1, mode: box}
+                condition:
+                  label: "Condition (optional)"
+                  selector:
+                    condition: {}
+                animation:
+                  label: Animation
+                  selector:
+                    select:
+                      options: [pulse, ping, spin, bounce, none]
+                duration:
+                  label: "Duration (s)"
+                  selector:
+                    number: {min: 0.2, max: 10, step: 0.1, mode: box}
         - name: main_sb_off_color
           label: Off background color override (hex/css)
           selector:
