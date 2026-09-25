@@ -1,6 +1,6 @@
 room-card-plus:
   name: Room Card Plus
-  version: v1.3.1
+  version: v1.3.2
   creator: Lucio
   link: https://github.com/Clooos/Bubble-Card/discussions/2113
   supported:
@@ -247,13 +247,13 @@ room-card-plus:
               const br = this.config["room-card-plus"]?.icon_radius_br;
               const bl = this.config["room-card-plus"]?.icon_radius_bl;
 
-              const hasCustom = tl !== undefined || tr !== undefined || br !== undefined || bl !== undefined;
-              if (hasCustom) return `${(tl ?? 0)}px ${(tr ?? 0)}px ${(br ?? 0)}px ${(bl ?? 0)}px`;
-
-              if (s === 'circle') return `50%`;
-          if (s === 'square') return `0px`;
-              if (s === 'rounded') return `${r}px`;
-              return `0px ${r}px 0px ${r}px`;
+              /* Per-corner values override only their own corner; unset corners keep the corner style */
+              const base = s === 'circle' ? ['50%','50%','50%','50%']
+                : s === 'square' ? [0,0,0,0]
+                : s === 'rounded' ? [r,r,r,r]
+                : [0,r,0,r];
+              const px = v => (String(v).trim() !== '' && !isNaN(Number(v))) ? v + 'px' : v;
+              return [tl,tr,br,bl].map((v,i) => (v === undefined || v === null || v === '') ? px(base[i]) : px(v)).join(' ');
             })()} !important;
           }
 
@@ -1740,7 +1740,7 @@ room-card-plus:
       schema:
         - name: sub_button_size
           label: Sub-button size (px)
-          default: 32
+          default: 40
           selector:
             number:
               min: 28
