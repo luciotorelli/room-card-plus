@@ -1,6 +1,6 @@
 room-card-plus:
   name: Room Card Plus
-  version: v1.3.0
+  version: v1.3.1
   creator: Lucio
   link: https://github.com/Clooos/Bubble-Card/discussions/2113
   supported:
@@ -290,6 +290,21 @@ room-card-plus:
       }
       .bubble-state .room-card-plus-state-sep { display: none !important; }
       .bubble-state > span[style*="inline-block"]:not([class]) { display: none !important; }
+      ` : ''}
+
+      ${this.config["room-card-plus"]?.title_wrap ? `
+      /* Long titles wrap onto two lines instead of scrolling or being cut */
+      .bubble-name-container, .bubble-name-container .bubble-name {
+        white-space: normal !important;
+        overflow: hidden !important;
+        display: -webkit-box !important;
+        -webkit-box-orient: vertical !important;
+        -webkit-line-clamp: 2 !important;
+        line-clamp: 2;
+        word-break: break-word;
+      }
+      .bubble-name-container .scrolling-container { animation: none !important; white-space: normal !important; }
+      .bubble-name-container .scrolling-container > *:not(:first-child) { display: none !important; }
       ` : ''}
 
       /* ===== FOOTER DRAWER STYLES ===== */
@@ -1277,6 +1292,10 @@ room-card-plus:
               min: 0
               max: 24
               step: 1
+        - name: title_wrap
+          label: "Wrap long titles onto two lines"
+          selector:
+            boolean: {}
         - name: state_two_lines
           label: "Show entity states one per line"
           selector:
