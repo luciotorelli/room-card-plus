@@ -1,6 +1,6 @@
 room-card-plus:
   name: Room Card Plus
-  version: v1.3.3
+  version: v1.3.4
   creator: Lucio
   link: https://github.com/Clooos/Bubble-Card/discussions/2113
   supported:
@@ -333,9 +333,17 @@ room-card-plus:
             border-bottom-right-radius: 0 !important;
           }
 
-          .rcp-drawer-elevated .bubble-background {
+          /* The wrapper clips the icon, so it must square off too or the icon keeps a rounded bite */
+          .rcp-drawer-elevated .bubble-background,
+          .bubble-container.rcp-footer-overflow.rcp-drawer-elevated .bubble-button-card,
+          .large .bubble-container.rcp-drawer-elevated .bubble-button-card {
             border-bottom-left-radius: 0 !important;
             border-bottom-right-radius: 0 !important;
+          }
+
+          /* ...and the icon block meets the open drawer flush, without its own rounded bottom-left */
+          .bubble-container.rcp-footer-overflow.rcp-drawer-elevated .bubble-icon-container {
+            border-bottom-left-radius: 0 !important;
           }
 
           /* Clip the card wrapper so the icon doesn't bleed outside the card,
@@ -536,7 +544,7 @@ room-card-plus:
 
           /* Configurable on/off colors for footer (bottom) sub-buttons */
           .rcp-footer-drawer-grid .bubble-sub-button.background-off {
-            background-color: ${this.config["room-card-plus"]?.footer_sb_off_color ?? '#1c1111'} !important;
+            background-color: ${this.config["room-card-plus"]?.footer_sb_off_color ?? 'rgba(255,255,255,0.07)'} !important;
           }
           ${this.config["room-card-plus"]?.footer_sb_on_color ? `
           .rcp-footer-drawer-grid .bubble-sub-button.background-on {
@@ -1866,7 +1874,7 @@ room-card-plus:
               step: 1
         - name: footer_sb_off_color
           label: Off background color
-          default: '#1c1111'
+          default: 'rgba(255,255,255,0.07)'
           selector:
             text: {}
         - name: footer_sb_on_color
